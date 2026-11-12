@@ -947,7 +947,7 @@ export const TRIPURA_SEED_ASSETS: Asset[] = [
     status: "active",
     district: "West Tripura",
     city: "Mohanpur / Lembucherra",
-    source_name: "Directorate of Panchayats, Govt of Tripura",
+    source_name: "Directorate of Panchayats (Tripura District Operations)",
   },
   {
     id: 63,
@@ -961,7 +961,7 @@ export const TRIPURA_SEED_ASSETS: Asset[] = [
     status: "active",
     district: "Gomati",
     city: "Udaipur / Matabari",
-    source_name: "Directorate of Panchayats, Govt of Tripura",
+    source_name: "Directorate of Panchayats (Tripura District Operations)",
   },
   {
     id: 64,
@@ -975,7 +975,7 @@ export const TRIPURA_SEED_ASSETS: Asset[] = [
     status: "active",
     district: "Sepahijala",
     city: "Bishalgarh / Madhupur",
-    source_name: "Directorate of Panchayats, Govt of Tripura",
+    source_name: "Directorate of Panchayats (Tripura District Operations)",
   },
   {
     id: 65,
@@ -989,7 +989,7 @@ export const TRIPURA_SEED_ASSETS: Asset[] = [
     status: "active",
     district: "North Tripura",
     city: "Kalacheerra / Bagbassa",
-    source_name: "Directorate of Panchayats, Govt of Tripura",
+    source_name: "Directorate of Panchayats (Tripura District Operations)",
   },
   {
     id: 66,
@@ -1003,7 +1003,7 @@ export const TRIPURA_SEED_ASSETS: Asset[] = [
     status: "active",
     district: "South Tripura",
     city: "Rajnagar",
-    source_name: "Directorate of Panchayats, Govt of Tripura",
+    source_name: "Directorate of Panchayats (Tripura District Operations)",
   },
   {
     id: 67,
@@ -1017,7 +1017,7 @@ export const TRIPURA_SEED_ASSETS: Asset[] = [
     status: "active",
     district: "Dhalai",
     city: "Kamalpur / Halahali",
-    source_name: "Directorate of Panchayats, Govt of Tripura",
+    source_name: "Directorate of Panchayats (Tripura District Operations)",
   },
   {
     id: 68,
@@ -1031,7 +1031,7 @@ export const TRIPURA_SEED_ASSETS: Asset[] = [
     status: "active",
     district: "Khowai",
     city: "Padmabil / Khowai",
-    source_name: "Directorate of Panchayats, Govt of Tripura",
+    source_name: "Directorate of Panchayats (Tripura District Operations)",
   },
   {
     id: 69,
@@ -1045,7 +1045,7 @@ export const TRIPURA_SEED_ASSETS: Asset[] = [
     status: "active",
     district: "Unakoti",
     city: "Kumarghat / Fatikroy",
-    source_name: "Directorate of Panchayats, Govt of Tripura",
+    source_name: "Directorate of Panchayats (Tripura District Operations)",
   },
 ];
 
@@ -1953,7 +1953,7 @@ export const DEMO_ADMIN_DEPTS = [
   {
     id: 3,
     code: "TR-DWS",
-    name: "Drinking Water & Sanitation Directorate, Govt. of Tripura",
+    name: "Drinking Water & Sanitation Directorate (Tripura Region)",
     head: "Superintending Engineer (Sanitation)",
     contact: "dws-directorate@tripura.gov.in",
     jurisdiction: "Urban & Sub-divisional Water Grids",

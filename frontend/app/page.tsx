@@ -61,9 +61,9 @@ const stats = [
 const govtFeatures = [
   "Tripura State Public Utilities",
   "8 Districts Operational Monitoring",
-  "Bilingual Support (EN / हिन्दी)",
+  "Multilingual Support (EN / বাংলা / हिन्दी)",
   "Citizen Grievance Redressal",
-  "Multi-Device Accessible (Mobile / Tablet / TV)",
+  "Multi-Device Accessible (Mobile / Tablet / Laptop / Desktop / TV)",
   "Real-Time GIS Infrastructure Mapping",
 ];
 
@@ -389,7 +389,7 @@ function GovtHome() {
             <div className="grid gap-10 md:grid-cols-2 items-center">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-widest text-[#0a5c9e]">
-                  Government of Tripura · Urban Infrastructure Operations
+                  Smart Urban Governance · Infrastructure Operations Demo
                 </p>
                 <h1 className="mt-4 text-4xl font-bold leading-snug text-[#0d1b2a]">
                   CivicLens Core

@@ -676,7 +676,7 @@ export default function AdminPage() {
                           </div>
                           <div>
                             <h3 className="text-xl font-black">Revoke Credentials &amp; Dismiss</h3>
-                            <p className="text-xs text-red-300">Executive Disciplinary Action · Govt of Tripura</p>
+                            <p className="text-xs text-red-300">Executive Disciplinary Action · State Operations Command</p>
                           </div>
                         </div>
 
@@ -755,7 +755,7 @@ export default function AdminPage() {
                         <div className="mt-5 rounded-2xl border border-white/10 bg-black/40 p-4 space-y-2 text-xs font-mono">
                           <div className="flex justify-between border-b border-white/10 pb-2">
                             <span className="text-gray-400">SMTP Gateway:</span>
-                            <span className="text-emerald-400 font-bold">mail.nic.in (Govt of Tripura Relay)</span>
+                            <span className="text-emerald-400 font-bold">mail.nic.in (Tripura Operations Relay)</span>
                           </div>
                           <div className="flex justify-between border-b border-white/10 pb-2">
                             <span className="text-gray-400">Recipient (To):</span>

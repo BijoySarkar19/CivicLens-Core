@@ -862,7 +862,7 @@ export default function ReportPage() {
                     Submitting Grievance to Tripura Operations…
                   </span>
                 ) : isGovt ? (
-                  "शिकायत दर्ज करें · Submit Tripura Grievance"
+                  "অভিযোগ দায়ের করুন · शिकायत दर्ज करें · Submit Tripura Grievance"
                 ) : (
                   "Submit Grievance to Operations Command"
                 )}

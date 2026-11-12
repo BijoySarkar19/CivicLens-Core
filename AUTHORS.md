@@ -9,5 +9,5 @@ The CivicLens Core public operations platform was designed and created by:
 ---
 
 ## Institutional Acknowledgments
-- **Government of Tripura** — Directorate of Urban Development, Agartala Municipal Corporation (AMC), Public Works Department (Roads & Bridges), Drinking Water & Sanitation (DWS), and Tripura State Electricity Corporation Limited (TSECL).
+- **Tripura Public Infrastructure & Municipal Operations References** — Directorate of Urban Development, Agartala Municipal Corporation (AMC), Public Works Department (Roads & Bridges), Drinking Water & Sanitation (DWS), and Tripura State Electricity Corporation Limited (TSECL).
 - **National Informatics Centre (NIC)** — Digital India and UX4G standards guidelines.

@@ -251,7 +251,7 @@ export default function AssetsPage() {
           <span className={`font-semibold mr-1 ${muteColor}`}>Category:</span>
           {[
             { id: "all", label: "All Assets" },
-            { id: "ward", label: "🏛️ Municipal Wards (incl. Ward 50)" },
+            { id: "ward", label: "🏛️ Municipal Wards" },
             { id: "panchayat", label: "🌾 Gram Panchayats" },
             { id: "tourist", label: "✨ Tourist Landmarks" },
             { id: "road", label: "🛣️ Roads & Expressways" },

@@ -1,0 +1,268 @@
+services:
+
+  # ============================================================
+  # PostgreSQL + PostGIS
+  # ============================================================
+  db:
+    image: postgis/postgis:16-3.4
+    container_name: civiclens-db
+
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-civiclens}
+      POSTGRES_USER: ${POSTGRES_USER:-civiclens}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-civiclens}
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-civiclens} -d ${POSTGRES_DB:-civiclens}"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+      start_period: 10s
+
+    restart: unless-stopped
+
+    networks:
+      - civiclens-network
+
+
+  # ============================================================
+  # Redis
+  # ============================================================
+  redis:
+    image: redis:7-alpine
+    container_name: civiclens-redis
+
+    command:
+      [
+        "redis-server",
+        "--appendonly",
+        "yes"
+      ]
+
+    ports:
+      - "6379:6379"
+
+    volumes:
+      - redisdata:/data
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "redis-cli",
+          "ping"
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+
+    restart: unless-stopped
+
+    networks:
+      - civiclens-network
+
+
+  # ============================================================
+  # MinIO / S3-Compatible Object Storage
+  # ============================================================
+  #
+  # IMPORTANT:
+  # Current MinIO releases use the quay.io/minio/aistor image.
+  #
+  minio:
+    image: quay.io/minio/aistor/minio:latest
+    container_name: civiclens-minio
+
+    command:
+      [
+        "server",
+        "/data",
+        "--console-address",
+        ":9001"
+      ]
+
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-civiclens}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-change-this-minio-password}
+
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+
+    volumes:
+      - miniodata:/data
+
+    restart: unless-stopped
+
+    networks:
+      - civiclens-network
+
+
+  # ============================================================
+  # FastAPI Backend
+  # ============================================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+
+    container_name: civiclens-backend
+
+    env_file:
+      - .env
+
+    environment:
+      APP_ENV: ${APP_ENV:-development}
+
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://civiclens:civiclens@db:5432/civiclens}
+
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT:-minio:9000}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-civiclens}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-change-this-minio-password}
+
+      CIVICLENS_AI_ENABLED: ${CIVICLENS_AI_ENABLED:-false}
+
+    ports:
+      - "8000:8000"
+
+    command:
+      [
+        "sh",
+        "-c",
+        "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+      ]
+
+    depends_on:
+      db:
+        condition: service_healthy
+
+      redis:
+        condition: service_healthy
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=5)\""
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+    restart: unless-stopped
+
+    networks:
+      - civiclens-network
+
+
+  # ============================================================
+  # Celery Worker
+  # ============================================================
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+
+    container_name: civiclens-worker
+
+    env_file:
+      - .env
+
+    environment:
+      APP_ENV: ${APP_ENV:-development}
+
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://civiclens:civiclens@db:5432/civiclens}
+
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT:-minio:9000}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-civiclens}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-change-this-minio-password}
+
+      CIVICLENS_AI_ENABLED: ${CIVICLENS_AI_ENABLED:-false}
+
+    command:
+      [
+        "celery",
+        "-A",
+        "app.worker.celery_app",
+        "worker",
+        "--loglevel=info"
+      ]
+
+    depends_on:
+      db:
+        condition: service_healthy
+
+      redis:
+        condition: service_healthy
+
+    restart: unless-stopped
+
+    networks:
+      - civiclens-network
+
+
+  # ============================================================
+  # Next.js Frontend
+  # ============================================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+
+    container_name: civiclens-frontend
+
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000/api/v1}
+
+    ports:
+      - "3000:3000"
+
+    depends_on:
+      backend:
+        condition: service_healthy
+
+    restart: unless-stopped
+
+    networks:
+      - civiclens-network
+
+
+# ==============================================================
+# Persistent Volumes
+# ==============================================================
+volumes:
+
+  pgdata:
+    name: civiclens-pgdata
+
+  redisdata:
+    name: civiclens-redisdata
+
+  miniodata:
+    name: civiclens-miniodata
+
+
+# ==============================================================
+# Internal Application Network
+# ==============================================================
+networks:
+
+  civiclens-network:
+    name: civiclens-network
+    driver: bridge

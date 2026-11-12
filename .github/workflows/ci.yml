@@ -1,0 +1,46 @@
+name: CivicLens CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install backend dependencies
+        run: pip install -r backend/requirements.txt
+      - name: Compile Python
+        run: python -m compileall backend/app
+      - name: Test backend
+        run: cd backend && pytest -q
+      - name: Lint backend
+        run: ruff check backend/app backend/tests
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install frontend dependencies
+        run: cd frontend && npm install
+      - name: Type check
+        run: cd frontend && npm run lint
+      - name: Production build
+        run: cd frontend && npm run build
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build backend image
+        run: docker build -t civiclens-backend ./backend
+      - name: Build frontend image
+        run: docker build -t civiclens-frontend ./frontend

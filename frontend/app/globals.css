@@ -1,0 +1,269 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ═══════════════════════════════════════════════
+   CIVICLENS CORE — GLOBAL DESIGN SYSTEM
+   Supports: Normal Mode + Government GIGW Mode
+   WCAG 2.1 AA compliant
+   ═══════════════════════════════════════════════ */
+
+/* ── CSS Custom Properties ── */
+:root {
+  --cl-bg:           #07111f;
+  --cl-bg-2:         #050c16;
+  --cl-bg-glass:     rgba(14, 28, 47, .68);
+  --cl-border:       rgba(255, 255, 255, .08);
+  --cl-text:         #e8f0fa;
+  --cl-text-muted:   #64748b;
+  --cl-accent:       #22d3ee;
+  --cl-accent-hover: #67e8f9;
+  --cl-focus:        rgba(34, 211, 238, .4);
+  color-scheme: dark;
+}
+
+/* GIGW / Government Mode variables */
+[data-govt-mode="true"] {
+  --cl-bg:           #ffffff;
+  --cl-bg-2:         #f4f7fb;
+  --cl-bg-glass:     rgba(240, 245, 255, .95);
+  --cl-border:       rgba(0, 0, 0, .12);
+  --cl-text:         #0d1b2a;
+  --cl-text-muted:   #4a5568;
+  --cl-accent:       #0a5c9e;
+  --cl-accent-hover: #0847776;
+  --cl-focus:        rgba(10, 92, 158, .4);
+  color-scheme: light;
+}
+
+/* ── Base ── */
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  background: var(--cl-bg);
+  color: var(--cl-text);
+  font-family: "Inter", ui-sans-serif, system-ui, -apple-system,
+               BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  transition: background .35s ease, color .35s ease;
+}
+
+/* Focus ring for keyboard users — WCAG 2.4.7 */
+*:focus-visible {
+  outline: 3px solid var(--cl-focus);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+/* Skip to main content — accessibility */
+.skip-link {
+  position: absolute;
+  top: -50px;
+  left: 1rem;
+  z-index: 9999;
+  padding: .5rem 1.25rem;
+  background: var(--cl-accent);
+  color: #fff;
+  font-weight: 700;
+  border-radius: 0 0 8px 8px;
+  transition: top .2s;
+}
+.skip-link:focus { top: 0; }
+
+::selection { background: rgba(34, 211, 238, .28); color: white; }
+[data-govt-mode="true"] ::selection { background: rgba(10, 92, 158, .22); color: #000; }
+
+/* ── Glass card ── */
+.glass {
+  background: var(--cl-bg-glass);
+  border: 1px solid var(--cl-border);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  transition: background .35s ease, border-color .35s ease;
+}
+
+/* ── Grid background ── */
+.grid-bg {
+  background-image:
+    linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+  background-size: 42px 42px;
+}
+[data-govt-mode="true"] .grid-bg {
+  background-image: none;
+  background: repeating-linear-gradient(
+    135deg,
+    rgba(10,92,158,.03) 0,
+    rgba(10,92,158,.03) 2px,
+    transparent 2px,
+    transparent 10px
+  );
+}
+
+/* ── Badge ── */
+.badge {
+  @apply inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[.03] px-2.5 py-1;
+}
+[data-govt-mode="true"] .badge {
+  border-color: rgba(0,0,0,.15);
+  background: rgba(10,92,158,.07);
+  color: #0d1b2a;
+}
+
+/* ── Form field ── */
+.field {
+  @apply w-full rounded-xl border p-3 text-sm outline-none transition;
+  border-color: var(--cl-border);
+  background: rgba(255,255,255,.04);
+  color: var(--cl-text);
+}
+.field:focus {
+  border-color: var(--cl-accent);
+  box-shadow: 0 0 0 3px var(--cl-focus);
+}
+[data-govt-mode="true"] .field {
+  background: #fff;
+  border-color: rgba(0,0,0,.2);
+  color: #0d1b2a;
+}
+
+/* ── Leaflet / Map ── */
+.leaflet-container { background: #0b1726; }
+[data-govt-mode="true"] .leaflet-container { background: #e9eff5; }
+
+.civic-marker { background: transparent; border: 0; }
+.civic-marker span {
+  display: block;
+  width: 14px; height: 14px;
+  border-radius: 999px;
+  background: #22d3ee;
+  border: 3px solid rgba(7,17,31,.9);
+  box-shadow: 0 0 0 5px rgba(34,211,238,.16), 0 0 24px rgba(34,211,238,.65);
+}
+[data-govt-mode="true"] .civic-marker span {
+  background: #0a5c9e;
+  border-color: #fff;
+  box-shadow: 0 0 0 4px rgba(10,92,158,.22);
+}
+
+/* ══ Animated gradient blob ══ */
+.hero-blob {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 999px;
+  filter: blur(60px);
+  animation: blob-drift 14s ease-in-out infinite;
+}
+@keyframes blob-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%       { transform: translate(60px, -40px) scale(1.12); }
+  66%       { transform: translate(-30px, 30px) scale(.92); }
+}
+
+/* ══ Shimmer skeleton loader ══ */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255,255,255,.04) 25%,
+    rgba(255,255,255,.1) 50%,
+    rgba(255,255,255,.04) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s infinite;
+  border-radius: 8px;
+}
+[data-govt-mode="true"] .skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(0,0,0,.04) 25%,
+    rgba(0,0,0,.09) 50%,
+    rgba(0,0,0,.04) 75%
+  );
+  background-size: 200% 100%;
+}
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+/* ══ Govt mode specific overrides ══ */
+[data-govt-mode="true"] body {
+  font-family: "Noto Sans", "Noto Sans Devanagari", ui-sans-serif, system-ui, sans-serif;
+}
+
+/* GIGW emblem stripe */
+.govt-stripe {
+  background: linear-gradient(to right, #ff9933, #ffffff, #138808);
+  height: 4px;
+}
+
+/* High contrast text in govt mode */
+[data-govt-mode="true"] .text-slate-400,
+[data-govt-mode="true"] .text-slate-500 { color: #4a5568 !important; }
+[data-govt-mode="true"] .text-slate-100,
+[data-govt-mode="true"] .text-slate-200 { color: #0d1b2a !important; }
+[data-govt-mode="true"] .text-cyan-300  { color: #0a5c9e !important; }
+[data-govt-mode="true"] .text-cyan-200  { color: #0a5c9e !important; }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 999px; }
+[data-govt-mode="true"] ::-webkit-scrollbar-thumb { background: rgba(0,0,0,.18); }
+
+/* ── Print styles (GIGW requirement) ── */
+@media print {
+  .no-print { display: none !important; }
+  body { background: #fff !important; color: #000 !important; }
+  a::after { content: " [" attr(href) "]"; font-size: .8em; color: #555; }
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+  }
+}
+
+/* ── Mobile & Touch Screen Optimizations (< 640px) ── */
+@media (max-width: 640px) {
+  button, input, select, textarea, a {
+    touch-action: manipulation;
+  }
+  .glass {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+}
+
+/* ── Tablet & Foldable Screens (641px - 1024px) ── */
+@media (min-width: 641px) and (max-width: 1024px) {
+  body {
+    font-size: 16px;
+  }
+  .glass {
+    backdrop-filter: blur(16px);
+  }
+}
+
+/* ── TV & Large 4K / 8K Displays (10-foot UI >= 1920px) ── */
+@media (min-width: 1920px) {
+  html {
+    font-size: 18px; /* High legibility from TV couch distance */
+  }
+  *:focus-visible {
+    outline-width: 5px;
+    outline-offset: 5px;
+  }
+  .max-w-7xl {
+    max-width: 94rem;
+  }
+}
+
+@media (min-width: 2560px) {
+  html {
+    font-size: 20px;
+  }
+  .max-w-7xl {
+    max-width: 114rem;
+  }
+}

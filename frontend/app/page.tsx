@@ -59,12 +59,12 @@ const stats = [
 ];
 
 const govtFeatures = [
-  "WCAG 2.1 Level AA Compliant",
-  "GIGW 3.0 Guidelines",
-  "ISO 23026 Standards",
-  "Rights of Persons with Disabilities Act, 2016",
+  "Tripura State Public Utilities",
+  "8 Districts Operational Monitoring",
   "Bilingual Support (EN / हिन्दी)",
-  "Screen Reader Compatible",
+  "Citizen Grievance Redressal",
+  "Multi-Device Accessible (Mobile / Tablet / TV)",
+  "Real-Time GIS Infrastructure Mapping",
 ];
 
 export default function Home() {
@@ -325,20 +325,18 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── Accessibility badge section ── */}
+        {/* ── Operational Features section ── */}
         <section
           className="mx-auto max-w-7xl px-5 pb-28 lg:px-8"
-          aria-label="Compliance and standards"
+          aria-label="Features and coverage"
         >
           <div className="text-center mb-10">
             <h2 className="text-3xl font-black tracking-tight">
               Built for{" "}
-              <span className="text-cyan-300">compliance & accessibility</span>
+              <span className="text-cyan-300">Tripura Public Infrastructure</span>
             </h2>
             <p className="mt-3 text-slate-400 max-w-lg mx-auto">
-              Meets GIGW 3.0 and international accessibility standards. Toggle
-              the Government View in the header for the full GIGW-compliant
-              experience.
+              Real-time asset tracking, field inspection workflows and citizen grievance resolution across all 8 districts of Tripura.
             </p>
           </div>
 
@@ -377,11 +375,9 @@ function GovtHome() {
       <Header publicSite />
 
       <main id="main-content">
-        {/* Top banner — mirrors NIC / India.gov.in pattern */}
-        <div className="bg-[#0a5c9e] text-white py-2 text-center text-sm font-medium">
-          <span aria-hidden="true">🇮🇳</span> This is an official Government of
-          India digital services platform &nbsp;|&nbsp; Ministry of Housing
-          &amp; Urban Affairs
+        {/* Top banner — Tripura Civic Infrastructure Operations Demo */}
+        <div className="bg-[#0a5c9e] text-white py-2 text-center text-xs sm:text-sm font-medium">
+          Tripura Urban Infrastructure Operations &amp; Grievance Redressal System · Demonstration Portal
         </div>
 
         {/* Hero */}
@@ -393,19 +389,19 @@ function GovtHome() {
             <div className="grid gap-10 md:grid-cols-2 items-center">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-widest text-[#0a5c9e]">
-                  Ministry of Housing &amp; Urban Affairs
+                  Government of Tripura · Urban Infrastructure Operations
                 </p>
                 <h1 className="mt-4 text-4xl font-bold leading-snug text-[#0d1b2a]">
                   CivicLens Core
                   <br />
                   <span className="text-[#0a5c9e]">
-                    Public Infrastructure Operations
+                    Tripura Infrastructure Operations
                   </span>
                 </h1>
                 <p className="mt-4 text-gray-600 leading-7">
-                  An official digital platform enabling transparent management
-                  of public infrastructure assets, incident reporting, field
-                  inspections and work orders across India.
+                  Digital demonstration platform enabling transparent management
+                  of public infrastructure assets, citizen grievance reporting, field
+                  inspections and work orders across all 8 districts of Tripura.
                 </p>
                 <div className="mt-6 flex flex-wrap gap-3">
                   <Link
@@ -514,12 +510,12 @@ function GovtHome() {
           </div>
         </section>
 
-        {/* Compliance strip */}
+        {/* Coverage strip */}
         <section className="bg-gray-50 border-b border-gray-200 py-6">
           <div className="mx-auto max-w-6xl px-6">
             <div className="flex flex-wrap gap-4 items-center justify-center text-xs text-gray-600">
               <span className="font-semibold text-[#0a5c9e]">
-                Standards complied:
+                Operations Scope:
               </span>
               {govtFeatures.map((f) => (
                 <span
@@ -580,15 +576,9 @@ function GovtHome() {
           </div>
         </section>
 
-        {/* Last updated */}
+        {/* Policy strip */}
         <div className="border-t border-gray-200 bg-white py-4 text-center text-xs text-gray-500">
-          Last updated:{" "}
-          {new Date().toLocaleDateString("en-IN", {
-            day: "numeric",
-            month: "long",
-            year: "numeric",
-          })}{" "}
-          &nbsp;|&nbsp; Website Policy &nbsp;|&nbsp; Accessibility Statement
+          Tripura Civic Operations Demonstration &nbsp;|&nbsp; Website Policy &nbsp;|&nbsp; Accessibility Statement
           &nbsp;|&nbsp; Sitemap
         </div>
       </main>

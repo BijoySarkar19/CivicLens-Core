@@ -108,8 +108,8 @@ export function Header({ publicSite = false }: { publicSite?: boolean }) {
                 }`}
               >
                 {isGovt
-                  ? "भारत सरकार · Govt. of India"
-                  : "Part 1 · Operations"}
+                  ? "त्रिपुरा सरकार · Govt. of Tripura"
+                  : "Tripura Operations"}
               </div>
             </div>
           </Link>

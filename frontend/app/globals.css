@@ -127,6 +127,35 @@ body {
   color: #0d1b2a;
 }
 
+/* ── Select Dropdown & Option High-Contrast Styling ── */
+select {
+  color-scheme: dark;
+}
+select option {
+  background-color: #07111f !important;
+  color: #ffffff !important;
+  padding: 10px 14px;
+}
+select option:checked,
+select option:hover {
+  background-color: #0a5c9e !important;
+  color: #ffffff !important;
+}
+
+[data-govt-mode="true"] select {
+  color-scheme: light;
+}
+[data-govt-mode="true"] select option {
+  background-color: #ffffff !important;
+  color: #0d1b2a !important;
+  padding: 10px 14px;
+}
+[data-govt-mode="true"] select option:checked,
+[data-govt-mode="true"] select option:hover {
+  background-color: #0a5c9e !important;
+  color: #ffffff !important;
+}
+
 /* ── Leaflet / Map ── */
 .leaflet-container { background: #0b1726; }
 [data-govt-mode="true"] .leaflet-container { background: #e9eff5; }

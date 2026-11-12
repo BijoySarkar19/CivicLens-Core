@@ -13,13 +13,13 @@ export function GovtModeToggle() {
       title={
         isGovt
           ? "Switch to Modern View"
-          : "Switch to Government View (GIGW 3.0)"
+          : "Switch to Government Style View"
       }
       aria-pressed={isGovt}
       aria-label={
         isGovt
           ? "Switch to Modern View"
-          : "Switch to Government View (GIGW 3.0 compliant)"
+          : "Switch to Government Style View"
       }
       className={`relative flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 ${
         isGovt

@@ -134,12 +134,12 @@ export default function AssetsPage() {
             value={districtFilter}
             onChange={(e) => setDistrictFilter(e.target.value)}
             className={`rounded-xl border px-4 py-2.5 text-sm outline-none ${
-              isGovt ? "border-gray-200 bg-white text-gray-700" : "border-white/10 bg-[#07111f] text-slate-200"
+              isGovt ? "border-gray-300 bg-white text-gray-900" : "border-white/10 bg-[#0b1726] text-slate-100"
             }`}
             aria-label="Filter by district"
           >
             {TRIPURA_DISTRICTS.map((d) => (
-              <option key={d} value={d}>
+              <option key={d} value={d} className={isGovt ? "bg-white text-gray-900" : "bg-[#0b1726] text-white"}>
                 {d}
               </option>
             ))}
@@ -152,15 +152,15 @@ export default function AssetsPage() {
             value={conditionFilter}
             onChange={(e) => setConditionFilter(e.target.value)}
             className={`rounded-xl border px-4 py-2.5 text-sm outline-none ${
-              isGovt ? "border-gray-200 bg-white text-gray-700" : "border-white/10 bg-[#07111f] text-slate-200"
+              isGovt ? "border-gray-300 bg-white text-gray-900" : "border-white/10 bg-[#0b1726] text-slate-100"
             }`}
             aria-label="Filter by condition"
           >
-            <option value="all">All Conditions</option>
-            <option value="good">Good</option>
-            <option value="fair">Fair</option>
-            <option value="poor">Poor</option>
-            <option value="critical">Critical</option>
+            <option value="all" className={isGovt ? "bg-white text-gray-900" : "bg-[#0b1726] text-white"}>All Conditions</option>
+            <option value="good" className={isGovt ? "bg-white text-gray-900" : "bg-[#0b1726] text-white"}>Good</option>
+            <option value="fair" className={isGovt ? "bg-white text-gray-900" : "bg-[#0b1726] text-white"}>Fair</option>
+            <option value="poor" className={isGovt ? "bg-white text-gray-900" : "bg-[#0b1726] text-white"}>Poor</option>
+            <option value="critical" className={isGovt ? "bg-white text-gray-900" : "bg-[#0b1726] text-white"}>Critical</option>
           </select>
 
           {/* View toggle */}

@@ -529,10 +529,11 @@ export default function ReportPage() {
                   id="severity-field"
                   name="severity"
                   required
+                  defaultValue="medium"
                   className="field font-medium"
                 >
                   <option value="low">Low — Minor inconvenience</option>
-                  <option value="medium" selected>Medium — Affecting regular neighborhood traffic</option>
+                  <option value="medium">Medium — Affecting regular neighborhood traffic</option>
                   <option value="high">High — Significant hazard or property damage</option>
                   <option value="critical">Critical — Immediate public safety / life danger</option>
                 </select>

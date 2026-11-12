@@ -127,23 +127,30 @@ body {
   color: #0d1b2a;
 }
 
-/* ── Select Dropdown & Option High-Contrast Styling ── */
-select {
+/* ── Select Dropdown & Option Solid High-Contrast Styling (Windows / Mobile / TV) ── */
+select,
+select.field {
   color-scheme: dark;
+  background-color: #0b1726 !important;
+  color: #f8fafc !important;
 }
 select option {
-  background-color: #07111f !important;
-  color: #ffffff !important;
+  background-color: #0b1726 !important;
+  color: #f8fafc !important;
   padding: 10px 14px;
 }
 select option:checked,
 select option:hover {
-  background-color: #0a5c9e !important;
+  background-color: #0284c7 !important;
   color: #ffffff !important;
 }
 
-[data-govt-mode="true"] select {
+[data-govt-mode="true"] select,
+[data-govt-mode="true"] select.field {
   color-scheme: light;
+  background-color: #ffffff !important;
+  color: #0d1b2a !important;
+  border-color: rgba(0, 0, 0, 0.25) !important;
 }
 [data-govt-mode="true"] select option {
   background-color: #ffffff !important;

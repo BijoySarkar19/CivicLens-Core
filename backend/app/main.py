@@ -25,7 +25,10 @@ limiter = Limiter(key_func=get_remote_address)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    seed_admin()
+    try:
+        seed_admin()
+    except Exception as exc:
+        logger.warning("Database unavailable during startup seed: %s. Operating in standalone demo mode.", exc)
     logger.info("CivicLens Core Part 1 API starting")
     logger.info("Part 2 AI feature flag: %s", settings.civiclens_ai_enabled)
     yield

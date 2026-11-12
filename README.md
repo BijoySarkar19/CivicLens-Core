@@ -223,13 +223,15 @@ docker compose ps
 | **CivicLens Web Portal** | [`http://localhost:3000`](http://localhost:3000) | `3000` | Ready (`200 OK`) · Citizen, Officer &amp; Admin UI |
 | **Interactive API Docs (Swagger)** | [`http://localhost:8000/docs`](http://localhost:8000/docs) | `8000` | Interactive OpenAPI schema &amp; endpoint testing |
 | **Alternative API Docs (ReDoc)** | [`http://localhost:8000/redoc`](http://localhost:8000/redoc) | `8000` | Formatted technical API documentation |
+| **MinIO S3 Storage Console** | [`http://localhost:9001`](http://localhost:9001) | `9001` | Web storage manager (`civiclens` / `Admin123!`) |
 | **Backend Health Probe** | [`http://localhost:8000/health`](http://localhost:8000/health) | `8000` | Operational status: `{"status": "ok"}` |
 
 #### 🗄️ Backend Data Services (Internal TCP Sockets — Not Web Pages)
 | Service | Protocol &amp; Socket | Port | Access Tool / Connection String |
 | :--- | :--- | :---: | :--- |
-| **PostgreSQL 16 + PostGIS 3.4** | TCP / PostgreSQL Wire | `5432` | `postgresql://postgres:postgres@localhost:5432/civiclens` (DBeaver, TablePlus, `psql`) |
+| **PostgreSQL 16 + PostGIS 3.4** | TCP / PostgreSQL Wire | `5432` | `postgresql://civiclens:Admin123!@localhost:5432/civiclens` (DBeaver, TablePlus, `psql`) |
 | **Redis 7 In-Memory Cache** | TCP / Redis RESP | `6379` | `redis://localhost:6379/0` (`redis-cli -h localhost -p 6379`) |
+| **MinIO S3 Storage API** | TCP / S3 REST | `9000` | `http://localhost:9000` (Boto3 / AWS S3 SDK endpoint) |
 
 ---
 
@@ -245,7 +247,7 @@ CivicLens-Core/
 │   │   │   └── v1/               # Versioned REST endpoints
 │   │   │       ├── admin.py          # Admin controls & user dossier management
 │   │   │       ├── analytics.py      # Operations dashboard KPIs & failure curves
-│   │   │       ├── assets.py         # 70+ spatial assets (Wards, Panchayats, Police, Fire)
+│   │   │       ├── assets.py         # 95+ spatial assets (Wards, Panchayats, Railways, Tunnels, Bridges, Rivers)
 │   │   │       ├── audit.py          # PostGIS SHA-256 cryptographic audit trail
 │   │   │       ├── auth.py           # JWT token generation & cookie management
 │   │   │       ├── departments.py    # Municipal department registry (AMC, PWD, DWS, TSECL)

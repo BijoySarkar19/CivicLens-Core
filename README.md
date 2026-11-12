@@ -300,13 +300,15 @@ CivicLens-Core/
 
 ## 🔐 Credentials & Interactive Navigation
 
-| Portal | Route | Demo Credentials | Key Capabilities |
+| Portal | Route | Demo Credentials | Role Scope & Capabilities |
 | :--- | :--- | :--- | :--- |
-| **Admin Command & Control** | `/admin` | `admin@civiclens.local` / `AdminPass123!` | Personnel dossier, dismissal simulation, audit logs, system telemetry |
-| **Predictive AI Suite** | `/ai` | Public Access | CV damage detector, photo upload, 90-day risk curve, What-If slider |
-| **Tripura GIS Map** | `/map` | Public Access | Interactive Leaflet heatmap, deep zoom, asset marker focus |
+| **👑 Super Admin Command** | `/admin` | `admin@civiclens.local` / `AdminPass123!` | **Full Statewide Oversight**: Unrestricted access to all 96 assets, all 22 personnel dossiers, 5 municipal departments, tamper-evident audit logs, and exclusive constitutional officer revocation & dismissal powers |
+| **🏗️ PWD Engineer View** | `/admin` | `pwd.officer@tripura.gov.in` / `PwdPass123!` | **Departmentally Scoped**: 26 PWD road/bridge infrastructure assets, 4 PWD engineers, road repair work orders, civil maintenance audit trail (Dismissal powers locked) |
+| **💧 DWS Inspector View** | `/admin` | `dws.inspector@tripura.gov.in` / `DwsPass123!` | **Departmentally Scoped**: 18 DWS water treatment & distribution assets, 3 field inspectors, pipeline maintenance work tickets, water audits (Dismissal powers locked) |
+| **Predictive AI Suite** | `/ai` | Public Access | CV damage detector head, photo upload, 90-day risk curve, What-If simulation slider |
+| **Tripura GIS Map** | `/map` | Public Access | Interactive Leaflet heatmap, deep zoom, asset marker focus across all 8 districts |
 | **Asset Registry** | `/assets` | Public Access | 95+ assets with category filters: Municipal Wards, Panchayats, Railways, Tunnels, Bridges, Rivers, Tourist |
-| **Citizen Grievance Submission** | `/report` | Public Access | Photo evidence, GPS capture, word counter (5 to 10,000 words) |
+| **Citizen Grievance Submission** | `/report` | Public Access | Photo evidence, GPS capture, multilingual label (EN/বাংলা/हिन्दी), word counter (5 to 10,000 words) |
 | **Grievance Status Tracker** | `/login` | Mobile: `98621 44520` (OTP: `123456`) | Real-time complaint progression timeline and resolution SLA |
 
 ---

@@ -6,6 +6,36 @@ export type ApiError = {
   request_id?: string;
 };
 
+export type UserRole = "super_admin" | "pwd_engineer" | "dws_inspector";
+
+export interface StoredUser {
+  id?: number;
+  email: string;
+  name: string;
+  role: UserRole;
+  designation?: string;
+  department?: string;
+  avatar?: string;
+}
+
+export function getCurrentUser(): StoredUser | null {
+  if (typeof window === "undefined") return null;
+  const stored = localStorage.getItem("cl_active_user");
+  if (!stored) return null;
+  try {
+    return JSON.parse(stored);
+  } catch {
+    return null;
+  }
+}
+
+export function setCurrentUser(user: StoredUser) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem("cl_active_user", JSON.stringify(user));
+  } catch {}
+}
+
 export function getClientToken(): string | null {
   if (typeof window === "undefined") return null;
   const fromLocal = localStorage.getItem("cl_token");

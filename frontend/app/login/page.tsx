@@ -4,7 +4,7 @@ import { FormEvent, useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { API_BASE, setClientToken } from "@/lib/api";
+import { API_BASE, setClientToken, setCurrentUser } from "@/lib/api";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { useGovtMode } from "@/lib/govt-mode";
@@ -213,6 +213,36 @@ function LoginPageContent() {
     const targetEmail = (directEmail ?? email).trim();
     const targetPassword = directPassword ?? password;
     const dest = nextParam || (targetEmail.includes("admin") ? "/admin" : "/dashboard");
+
+    // Persist designated authenticated officer role
+    if (targetEmail.includes("pwd")) {
+      setCurrentUser({
+        email: targetEmail,
+        name: "Er. Arun Debnath",
+        role: "pwd_engineer",
+        designation: "Executive Engineer (Roads & Bridges)",
+        department: "Public Works Department (Roads & Bridges)",
+        avatar: "https://randomuser.me/api/portraits/men/46.jpg",
+      });
+    } else if (targetEmail.includes("dws")) {
+      setCurrentUser({
+        email: targetEmail,
+        name: "Bikash Jamatia",
+        role: "dws_inspector",
+        designation: "Senior Water Works Field Inspector",
+        department: "Drinking Water & Sanitation Directorate (DWS)",
+        avatar: "https://randomuser.me/api/portraits/men/32.jpg",
+      });
+    } else {
+      setCurrentUser({
+        email: targetEmail,
+        name: "Shri Debasish Roy, TCS",
+        role: "super_admin",
+        designation: "Chief Operations Officer & State Director",
+        department: "Directorate of Urban Development, Agartala",
+        avatar: "https://randomuser.me/api/portraits/men/51.jpg",
+      });
+    }
 
     try {
       const body = new URLSearchParams();

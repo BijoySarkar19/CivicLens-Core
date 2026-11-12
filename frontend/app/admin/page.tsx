@@ -6,6 +6,7 @@ import Link from "next/link";
 import {
   Users,
   ShieldCheck,
+  ShieldAlert,
   Activity,
   AlertTriangle,
   CheckCircle2,
@@ -40,7 +41,7 @@ import {
   Radio,
   FileCode,
 } from "lucide-react";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, getCurrentUser, setCurrentUser, UserRole } from "@/lib/api";
 import {
   DashboardSummary,
   DEMO_ADMIN_USERS,
@@ -66,17 +67,7 @@ const ROLE_LABELS: Record<string, { label: string; color: string }> = {
 export default function AdminPage() {
   const { isGovt } = useGovtMode();
   const [tab, setTab] = useState<AdminTab>("overview");
-  const [summary, setSummary] = useState<DashboardSummary>({
-    assets: 25,
-    incidents: 8,
-    open_incidents: 3,
-    critical_incidents: 1,
-    work_orders: 6,
-    open_work_orders: 4,
-    inspections: 6,
-    maintenance_records: 14,
-    ai_enabled: true,
-  });
+  const [activeRole, setActiveRole] = useState<UserRole>("super_admin");
   const [users, setUsers] = useState(DEMO_ADMIN_USERS);
   const [audit, setAudit] = useState(DEMO_ADMIN_AUDIT);
   const [depts, setDepts] = useState(DEMO_ADMIN_DEPTS);
@@ -85,6 +76,126 @@ export default function AdminPage() {
   const [deptSearch, setDeptSearch] = useState("");
   const [auditSearch, setAuditSearch] = useState("");
   const [refreshing, setRefreshing] = useState(false);
+
+  // Sync active logged-in officer persona
+  useEffect(() => {
+    const user = getCurrentUser();
+    if (user?.role) {
+      setActiveRole(user.role);
+    }
+  }, []);
+
+  const switchRole = (newRole: UserRole) => {
+    setActiveRole(newRole);
+    if (newRole === "super_admin") {
+      setCurrentUser({
+        email: "admin@civiclens.local",
+        name: "Shri Debasish Roy, TCS",
+        role: "super_admin",
+        designation: "Chief Operations Officer & State Director",
+        department: "Directorate of Urban Development, Agartala",
+        avatar: "https://randomuser.me/api/portraits/men/51.jpg",
+      });
+    } else if (newRole === "pwd_engineer") {
+      setCurrentUser({
+        email: "pwd.officer@tripura.gov.in",
+        name: "Er. Arun Debnath",
+        role: "pwd_engineer",
+        designation: "Executive Engineer (Roads & Bridges)",
+        department: "Public Works Department (Roads & Bridges)",
+        avatar: "https://randomuser.me/api/portraits/men/46.jpg",
+      });
+    } else if (newRole === "dws_inspector") {
+      setCurrentUser({
+        email: "dws.inspector@tripura.gov.in",
+        name: "Bikash Jamatia",
+        role: "dws_inspector",
+        designation: "Senior Water Works Field Inspector",
+        department: "Drinking Water & Sanitation Directorate (DWS)",
+        avatar: "https://randomuser.me/api/portraits/men/32.jpg",
+      });
+    }
+  };
+
+  // Role-Based Dataset Scoping: Only Super Admin has all details!
+  const scopedUsers = users.filter((u) => {
+    if (activeRole === "super_admin") return true;
+    if (activeRole === "pwd_engineer") {
+      return (
+        u.department.toLowerCase().includes("public works") ||
+        u.department.toLowerCase().includes("pwd") ||
+        u.role === "infrastructure_manager" ||
+        u.email.includes("pwd")
+      );
+    }
+    if (activeRole === "dws_inspector") {
+      return (
+        u.department.toLowerCase().includes("drinking water") ||
+        u.department.toLowerCase().includes("dws") ||
+        u.role === "field_inspector" ||
+        u.email.includes("dws")
+      );
+    }
+    return true;
+  });
+
+  const scopedDepts = depts.filter((d) => {
+    if (activeRole === "super_admin") return true;
+    if (activeRole === "pwd_engineer") {
+      return d.code === "TR-PWD" || d.name.toLowerCase().includes("public works");
+    }
+    if (activeRole === "dws_inspector") {
+      return d.code === "TR-DWS" || d.name.toLowerCase().includes("drinking water");
+    }
+    return true;
+  });
+
+  const scopedAudit = audit.filter((a) => {
+    if (activeRole === "super_admin") return true;
+    if (activeRole === "pwd_engineer") {
+      return (
+        a.details?.toLowerCase().includes("road") ||
+        a.details?.toLowerCase().includes("pwd") ||
+        a.details?.toLowerCase().includes("bitumen") ||
+        a.details?.toLowerCase().includes("bridge") ||
+        a.actor?.toLowerCase().includes("pwd") ||
+        a.actor?.toLowerCase().includes("arun") ||
+        a.entity?.toLowerCase().includes("work_order")
+      );
+    }
+    if (activeRole === "dws_inspector") {
+      return (
+        a.details?.toLowerCase().includes("water") ||
+        a.details?.toLowerCase().includes("dws") ||
+        a.details?.toLowerCase().includes("pipeline") ||
+        a.details?.toLowerCase().includes("leak") ||
+        a.actor?.toLowerCase().includes("dws") ||
+        a.actor?.toLowerCase().includes("jamatia") ||
+        a.entity?.toLowerCase().includes("inspection")
+      );
+    }
+    return true;
+  });
+
+  const scopedSummary: DashboardSummary = {
+    assets:
+      activeRole === "super_admin" ? 96 : activeRole === "pwd_engineer" ? 26 : 18,
+    incidents:
+      activeRole === "super_admin" ? 8 : activeRole === "pwd_engineer" ? 3 : 2,
+    open_incidents:
+      activeRole === "super_admin" ? 3 : activeRole === "pwd_engineer" ? 1 : 1,
+    critical_incidents:
+      activeRole === "super_admin" ? 1 : activeRole === "pwd_engineer" ? 1 : 0,
+    work_orders:
+      activeRole === "super_admin" ? 6 : activeRole === "pwd_engineer" ? 3 : 2,
+    open_work_orders:
+      activeRole === "super_admin" ? 4 : activeRole === "pwd_engineer" ? 2 : 1,
+    inspections:
+      activeRole === "super_admin" ? 6 : activeRole === "pwd_engineer" ? 4 : 2,
+    maintenance_records:
+      activeRole === "super_admin" ? 14 : activeRole === "pwd_engineer" ? 8 : 6,
+    ai_enabled: true,
+  };
 
   // Employee details & dismissal management
   const [selectedOfficer, setSelectedOfficer] = useState<(typeof DEMO_ADMIN_USERS)[0] | null>(null);
@@ -96,6 +207,8 @@ export default function AdminPage() {
   } | null>(null);
 
   const handleDismissOfficer = (officer: (typeof DEMO_ADMIN_USERS)[0]) => {
+    if (activeRole !== "super_admin") return;
+
     const token = `TR-REV-NIC-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
     const timestamp = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
 
@@ -136,7 +249,6 @@ export default function AdminPage() {
         apiFetch<{ items: typeof DEMO_ADMIN_USERS }>("/admin/users"),
       ]);
 
-      if (s.status === "fulfilled" && s.value) setSummary(s.value);
       if (a.status === "fulfilled" && a.value?.items?.length) setAudit(a.value.items);
       if (d.status === "fulfilled" && d.value?.items?.length) setDepts(d.value.items);
       if (u.status === "fulfilled" && u.value?.items?.length) setUsers(u.value.items);
@@ -155,19 +267,19 @@ export default function AdminPage() {
     fetchData();
   }, [fetchData]);
 
-  const filteredUsers = users.filter((u) =>
+  const filteredUsers = scopedUsers.filter((u) =>
     `${u.name} ${u.email} ${u.role} ${u.department}`
       .toLowerCase()
       .includes(userSearch.toLowerCase())
   );
 
-  const filteredDepts = depts.filter((d) =>
+  const filteredDepts = scopedDepts.filter((d) =>
     `${d.name} ${d.code} ${d.head} ${d.jurisdiction}`
       .toLowerCase()
       .includes(deptSearch.toLowerCase())
   );
 
-  const filteredAudit = audit.filter((a) =>
+  const filteredAudit = scopedAudit.filter((a) =>
     `${a.actor ?? ""} ${a.action} ${a.entity} ${a.entity_id ?? ""} ${a.details ?? ""}`
       .toLowerCase()
       .includes(auditSearch.toLowerCase())
@@ -178,9 +290,9 @@ export default function AdminPage() {
 
   const tabs: { id: AdminTab; label: string; icon: React.ComponentType<{ size?: number; className?: string }> }[] = [
     { id: "overview", label: "Overview", icon: BarChart3 },
-    { id: "users", label: `Users (${users.length})`, icon: Users },
-    { id: "departments", label: `Departments (${depts.length})`, icon: Building },
-    { id: "audit", label: `Audit Log (${audit.length})`, icon: FileText },
+    { id: "users", label: `Users (${filteredUsers.length})`, icon: Users },
+    { id: "departments", label: `Departments (${filteredDepts.length})`, icon: Building },
+    { id: "audit", label: `Audit Log (${filteredAudit.length})`, icon: FileText },
     { id: "system", label: "System Health", icon: Server },
   ];
 
@@ -217,6 +329,126 @@ export default function AdminPage() {
               <RefreshCw size={13} className={refreshing ? "animate-spin" : ""} aria-hidden="true" />
               Refresh
             </button>
+          </div>
+        </div>
+
+        {/* Active Persona Banner & Interactive Role Switcher */}
+        <div
+          className={`mb-8 rounded-2xl border p-4 sm:p-5 transition-all shadow-sm ${
+            activeRole === "super_admin"
+              ? isGovt
+                ? "border-amber-300 bg-amber-50/80 text-slate-900"
+                : "border-amber-400/30 bg-amber-500/10 text-white"
+              : activeRole === "pwd_engineer"
+              ? isGovt
+                ? "border-blue-300 bg-blue-50/80 text-slate-900"
+                : "border-blue-400/30 bg-blue-500/10 text-white"
+              : isGovt
+              ? "border-emerald-300 bg-emerald-50/80 text-slate-900"
+              : "border-emerald-400/30 bg-emerald-500/10 text-white"
+          }`}
+        >
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="flex items-start sm:items-center gap-3.5">
+              <div
+                className={`grid h-12 w-12 shrink-0 place-items-center rounded-2xl text-2xl shadow-inner ${
+                  activeRole === "super_admin"
+                    ? "bg-amber-400/20 text-amber-500 border border-amber-400/30"
+                    : activeRole === "pwd_engineer"
+                    ? "bg-blue-400/20 text-blue-500 border border-blue-400/30"
+                    : "bg-emerald-400/20 text-emerald-500 border border-emerald-400/30"
+                }`}
+              >
+                {activeRole === "super_admin" ? "👑" : activeRole === "pwd_engineer" ? "🏗️" : "💧"}
+              </div>
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span
+                    className={`badge text-[11px] font-black uppercase tracking-wider ${
+                      activeRole === "super_admin"
+                        ? "bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30"
+                        : activeRole === "pwd_engineer"
+                        ? "bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-500/30"
+                        : "bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30"
+                    }`}
+                  >
+                    {activeRole === "super_admin"
+                      ? "👑 Super Admin (Full Statewide Authority)"
+                      : activeRole === "pwd_engineer"
+                      ? "🏗️ PWD Executive Engineer (Roads & Bridges)"
+                      : "💧 DWS Senior Field Inspector (Water & Sanitation)"}
+                  </span>
+                  <span className={`text-xs font-mono font-bold ${isGovt ? "text-slate-600" : "text-slate-400"}`}>
+                    {activeRole === "super_admin"
+                      ? "admin@civiclens.local"
+                      : activeRole === "pwd_engineer"
+                      ? "pwd.officer@tripura.gov.in"
+                      : "dws.inspector@tripura.gov.in"}
+                  </span>
+                </div>
+                <p className={`text-xs mt-1.5 font-medium leading-relaxed ${isGovt ? "text-slate-700" : "text-slate-300"}`}>
+                  {activeRole === "super_admin" ? (
+                    <span>
+                      <strong className="text-amber-600 dark:text-amber-400">Unrestricted Full Access:</strong> Viewing all 96 Tripura assets across 8 districts, all 22 administrative officers, all 5 municipal departments, complete immutable audit ledger, and exclusive executive commission revocation &amp; dismissal powers.
+                    </span>
+                  ) : activeRole === "pwd_engineer" ? (
+                    <span>
+                      <strong className="text-blue-600 dark:text-blue-400">Departmentally Scoped View:</strong> Viewing 26 PWD road/bridge infrastructure assets, 4 PWD officers/engineers, active road repair work orders, and road maintenance audit logs. Officer dismissal power is locked (Super Admin clearance required).
+                    </span>
+                  ) : (
+                    <span>
+                      <strong className="text-emerald-600 dark:text-emerald-400">Departmentally Scoped View:</strong> Viewing 18 DWS water grid assets, 3 field inspectors, pipeline repair tickets, and water purity logs. Officer dismissal power is locked (Super Admin clearance required).
+                    </span>
+                  )}
+                </p>
+              </div>
+            </div>
+
+            {/* Quick Switch Persona Buttons */}
+            <div className="flex flex-wrap items-center gap-2 pt-2 lg:pt-0 border-t lg:border-t-0 border-black/10 dark:border-white/10 shrink-0">
+              <span className={`text-[11px] font-bold uppercase tracking-wider mr-1 ${isGovt ? "text-slate-600" : "text-slate-400"}`}>
+                Switch Persona:
+              </span>
+              <button
+                type="button"
+                onClick={() => switchRole("super_admin")}
+                className={`rounded-xl px-3 py-1.5 text-xs font-black transition ${
+                  activeRole === "super_admin"
+                    ? "bg-amber-400 text-slate-950 shadow-md ring-2 ring-amber-300 scale-105"
+                    : isGovt
+                    ? "bg-white border border-gray-300 text-gray-700 hover:bg-gray-100"
+                    : "bg-white/10 text-slate-300 hover:bg-white/20 border border-white/10"
+                }`}
+              >
+                👑 Super Admin
+              </button>
+              <button
+                type="button"
+                onClick={() => switchRole("pwd_engineer")}
+                className={`rounded-xl px-3 py-1.5 text-xs font-black transition ${
+                  activeRole === "pwd_engineer"
+                    ? "bg-blue-600 text-white shadow-md ring-2 ring-blue-400 scale-105"
+                    : isGovt
+                    ? "bg-white border border-gray-300 text-gray-700 hover:bg-gray-100"
+                    : "bg-white/10 text-slate-300 hover:bg-white/20 border border-white/10"
+                }`}
+              >
+                🏗️ PWD Engineer
+              </button>
+              <button
+                type="button"
+                onClick={() => switchRole("dws_inspector")}
+                className={`rounded-xl px-3 py-1.5 text-xs font-black transition ${
+                  activeRole === "dws_inspector"
+                    ? "bg-emerald-600 text-white shadow-md ring-2 ring-emerald-400 scale-105"
+                    : isGovt
+                    ? "bg-white border border-gray-300 text-gray-700 hover:bg-gray-100"
+                    : "bg-white/10 text-slate-300 hover:bg-white/20 border border-white/10"
+                }`}
+              >
+                💧 DWS Inspector
+              </button>
+            </div>
           </div>
         </div>
 
@@ -266,18 +498,86 @@ export default function AdminPage() {
             {/* 1. OVERVIEW TAB */}
             {tab === "overview" && (
               <div className="space-y-6">
+                {activeRole !== "super_admin" && (
+                  <div
+                    className={`rounded-2xl border p-4 text-xs font-medium flex items-center gap-3 ${
+                      isGovt ? "bg-amber-50 border-amber-300 text-amber-900" : "bg-amber-400/10 border-amber-400/30 text-amber-200"
+                    }`}
+                  >
+                    <ShieldAlert size={18} className="shrink-0 text-amber-500" />
+                    <p>
+                      <strong>Departmentally Scoped Metrics:</strong> You are viewing operational statistics filtered strictly to your jurisdiction (
+                      {activeRole === "pwd_engineer"
+                        ? "Public Works Department — Roads & Bridges"
+                        : "Drinking Water & Sanitation Directorate"
+                      }
+                      ). Only the <strong>Super Admin</strong> has complete unrestricted statewide oversight across all 8 districts and municipal directorates.
+                    </p>
+                  </div>
+                )}
+
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                  <StatCard label="Tripura Infrastructure Assets" value={summary.assets} hint="Covering all 8 districts" index={0} />
-                  <StatCard label="Total Public Grievances" value={summary.incidents} hint="Registered with GPS & evidence" index={1} variant="warning" />
-                  <StatCard label="Active Work Orders" value={summary.open_work_orders} hint="Assigned to PWD/TSECL/AMC" index={2} />
-                  <StatCard label="Field Inspection Reports" value={summary.inspections} hint="Verified structural audits" index={3} variant="success" />
+                  <StatCard
+                    label={
+                      activeRole === "super_admin"
+                        ? "Tripura Infrastructure Assets"
+                        : activeRole === "pwd_engineer"
+                        ? "PWD Roads & Bridges Assets"
+                        : "DWS Water Grid Assets"
+                    }
+                    value={scopedSummary.assets}
+                    hint={activeRole === "super_admin" ? "Covering all 8 districts" : "Departmental jurisdiction"}
+                    index={0}
+                  />
+                  <StatCard
+                    label="Public Grievances"
+                    value={scopedSummary.incidents}
+                    hint={activeRole === "super_admin" ? "Statewide registered incidents" : "Scoped to jurisdiction"}
+                    index={1}
+                    variant="warning"
+                  />
+                  <StatCard
+                    label="Active Work Orders"
+                    value={scopedSummary.open_work_orders}
+                    hint={activeRole === "super_admin" ? "Assigned across Tripura" : "Departmental tickets"}
+                    index={2}
+                  />
+                  <StatCard
+                    label="Field Inspection Reports"
+                    value={scopedSummary.inspections}
+                    hint={activeRole === "super_admin" ? "Verified structural audits" : "Field engineer audits"}
+                    index={3}
+                    variant="success"
+                  />
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                  <StatCard label="Total Work Orders Dispatched" value={summary.work_orders} hint="All time across Tripura" index={4} />
-                  <StatCard label="Open Critical Incidents" value={summary.critical_incidents} hint="P1 priority safety hazards" index={5} variant="danger" />
-                  <StatCard label="Completed Maintenance" value={summary.maintenance_records} hint="Resolved field tasks" index={6} variant="success" />
-                  <StatCard label="Tripura Municipal Departments" value={depts.length} hint="Active departments" index={7} />
+                  <StatCard
+                    label="Total Work Orders Dispatched"
+                    value={scopedSummary.work_orders}
+                    hint={activeRole === "super_admin" ? "All time across Tripura" : "Department execution tickets"}
+                    index={4}
+                  />
+                  <StatCard
+                    label="Critical Open Grievances"
+                    value={scopedSummary.critical_incidents}
+                    hint="P1 priority safety hazards"
+                    index={5}
+                    variant="danger"
+                  />
+                  <StatCard
+                    label="Completed Maintenance"
+                    value={scopedSummary.maintenance_records}
+                    hint="Resolved field tasks"
+                    index={6}
+                    variant="success"
+                  />
+                  <StatCard
+                    label={activeRole === "super_admin" ? "Tripura Municipal Departments" : "Assigned Directorate"}
+                    value={scopedDepts.length}
+                    hint={activeRole === "super_admin" ? "Active departments" : "Department profile"}
+                    index={7}
+                  />
                 </div>
 
                 {/* AI Predictive Decision Engine */}
@@ -330,7 +630,11 @@ export default function AdminPage() {
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-xs font-semibold text-gray-400">
-                      Total Roster: <strong className={isGovt ? "text-gray-900 font-bold" : "text-white"}>{users.length}</strong> (Active: {users.filter((u) => u.active).length}, Dismissed: {users.filter((u) => !u.active).length})
+                      {activeRole === "super_admin" ? "Statewide Personnel: " : "Departmental Roster: "}
+                      <strong className={isGovt ? "text-gray-900 font-bold" : "text-white"}>{scopedUsers.length}</strong> (Active: {scopedUsers.filter((u) => u.active).length}, Dismissed: {scopedUsers.filter((u) => !u.active).length})
+                      {activeRole !== "super_admin" && (
+                        <span className="ml-2 text-amber-500 font-bold">(Scoped to directorate)</span>
+                      )}
                     </span>
                   </div>
                 </div>
@@ -460,13 +764,22 @@ export default function AdminPage() {
                                     View Dossier
                                   </button>
                                   {u.active ? (
-                                    <button
-                                      onClick={() => setOfficerToDismiss(u)}
-                                      className="rounded-lg border border-red-500/30 bg-red-500/10 px-2.5 py-1.5 text-xs font-bold text-red-300 hover:bg-red-500 hover:text-white transition"
-                                      title="Revoke officer credentials & send automated dismissal notice"
-                                    >
-                                      Fire / Dismiss
-                                    </button>
+                                    activeRole === "super_admin" ? (
+                                      <button
+                                        onClick={() => setOfficerToDismiss(u)}
+                                        className="rounded-lg border border-red-500/30 bg-red-500/10 px-2.5 py-1.5 text-xs font-bold text-red-300 hover:bg-red-500 hover:text-white transition"
+                                        title="Revoke officer credentials & send automated dismissal notice"
+                                      >
+                                        Fire / Dismiss
+                                      </button>
+                                    ) : (
+                                      <span
+                                        className="rounded-lg border border-gray-500/20 bg-gray-500/10 px-2 py-1 text-[11px] font-semibold text-gray-400 cursor-not-allowed inline-flex items-center gap-1"
+                                        title="Super Admin clearance required to dismiss personnel"
+                                      >
+                                        <Lock size={10} /> Locked
+                                      </span>
+                                    )
                                   ) : (
                                     <span className="text-[11px] font-mono text-red-400 font-bold px-2 py-1 bg-red-500/5 rounded border border-red-500/20">
                                       Revoked
@@ -643,15 +956,21 @@ export default function AdminPage() {
                               Close Dossier
                             </button>
                             {selectedOfficer.active && (
-                              <button
-                                onClick={() => {
-                                  setOfficerToDismiss(selectedOfficer);
-                                  setSelectedOfficer(null);
-                                }}
-                                className="w-full sm:w-auto rounded-xl bg-red-600 hover:bg-red-500 px-4 py-2.5 text-xs font-black text-white shadow-lg shadow-red-600/30 transition flex items-center justify-center gap-2"
-                              >
-                                <Trash2 size={14} /> Revoke &amp; Dismiss (Fire)
-                              </button>
+                              activeRole === "super_admin" ? (
+                                <button
+                                  onClick={() => {
+                                    setOfficerToDismiss(selectedOfficer);
+                                    setSelectedOfficer(null);
+                                  }}
+                                  className="w-full sm:w-auto rounded-xl bg-red-600 hover:bg-red-500 px-4 py-2.5 text-xs font-black text-white shadow-lg shadow-red-600/30 transition flex items-center justify-center gap-2"
+                                >
+                                  <Trash2 size={14} /> Revoke &amp; Dismiss (Fire)
+                                </button>
+                              ) : (
+                                <span className="inline-flex items-center gap-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3.5 py-2 text-xs font-semibold text-amber-500 dark:text-amber-300">
+                                  <ShieldAlert size={14} className="shrink-0" /> Super Admin clearance required to revoke commissions
+                                </span>
+                              )
                             )}
                           </div>
                         </div>
@@ -817,7 +1136,9 @@ export default function AdminPage() {
                     />
                   </div>
                   <span className="text-xs font-medium text-gray-400">
-                    {filteredDepts.length} official departments registered
+                    {activeRole === "super_admin"
+                      ? `${filteredDepts.length} official departments registered across Tripura`
+                      : `${filteredDepts.length} department profile in jurisdiction`}
                   </span>
                 </div>
 
@@ -885,7 +1206,9 @@ export default function AdminPage() {
                     />
                   </div>
                   <span className="text-xs font-mono text-gray-400">
-                    Immutable SHA-256 Tamper-Evident Ledger
+                    {activeRole === "super_admin"
+                      ? `Immutable SHA-256 Ledger (${filteredAudit.length} entries statewide)`
+                      : `Scoped Audit Ledger (${filteredAudit.length} departmental entries)`}
                   </span>
                 </div>
 

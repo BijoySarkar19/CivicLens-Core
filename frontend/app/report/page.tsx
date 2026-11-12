@@ -560,9 +560,15 @@ export default function ReportPage() {
                   <span
                     className={`text-xs font-mono font-bold ${
                       wordCount < 5
-                        ? "text-amber-400"
+                        ? isGovt
+                          ? "text-amber-900 bg-amber-100/80 px-2 py-0.5 rounded border border-amber-300"
+                          : "text-amber-400"
                         : wordCount > 10000
-                        ? "text-red-400"
+                        ? isGovt
+                          ? "text-red-900 bg-red-100/80 px-2 py-0.5 rounded border border-red-300"
+                          : "text-red-400"
+                        : isGovt
+                        ? "text-emerald-900 bg-emerald-100/80 px-2 py-0.5 rounded border border-emerald-300"
                         : "text-emerald-400"
                     }`}
                   >

@@ -42,6 +42,7 @@ export default function AssetsPage() {
   const [query, setQuery] = useState("");
   const [districtFilter, setDistrictFilter] = useState("All Districts");
   const [conditionFilter, setConditionFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState<"all" | "ward" | "panchayat" | "tourist" | "road" | "power" | "emergency">("all");
   const [touristOnly, setTouristOnly] = useState(false);
   const [view, setView] = useState<"table" | "grid">("table");
   const { isGovt } = useGovtMode();
@@ -80,8 +81,18 @@ export default function AssetsPage() {
       x.name.toLowerCase().includes("jampui") ||
       x.name.toLowerCase().includes("chabimura") ||
       x.name.toLowerCase().includes("pilak");
+
+    const matchCategory =
+      categoryFilter === "all" ||
+      (categoryFilter === "ward" && (x.asset_type.toLowerCase().includes("ward") || x.name.toLowerCase().includes("ward"))) ||
+      (categoryFilter === "panchayat" && (x.asset_type.toLowerCase().includes("panchayat") || x.name.toLowerCase().includes("panchayat") || x.asset_code.startsWith("TR-GP-"))) ||
+      (categoryFilter === "tourist" && isTouristSpot) ||
+      (categoryFilter === "road" && (x.asset_type.toLowerCase().includes("road") || x.asset_type.toLowerCase().includes("expressway") || x.asset_type.toLowerCase().includes("highway") || x.asset_type.toLowerCase().includes("bridge"))) ||
+      (categoryFilter === "power" && (x.asset_type.toLowerCase().includes("power") || x.asset_type.toLowerCase().includes("substation") || x.asset_type.toLowerCase().includes("turbine"))) ||
+      (categoryFilter === "emergency" && (x.asset_type.toLowerCase().includes("police") || x.asset_type.toLowerCase().includes("fire")));
+
     const matchTourist = !touristOnly || isTouristSpot;
-    return matchSearch && matchDistrict && matchCond && matchTourist;
+    return matchSearch && matchDistrict && matchCond && matchCategory && matchTourist;
   });
 
   const accent = isGovt ? "text-[#0a5c9e]" : "text-cyan-300";
@@ -229,6 +240,40 @@ export default function AssetsPage() {
               Grid
             </button>
           </div>
+        </div>
+
+        {/* Quick Category Filter Bar */}
+        <div className="mt-4 flex flex-wrap gap-2 items-center text-xs">
+          <span className={`font-semibold mr-1 ${muteColor}`}>Category:</span>
+          {[
+            { id: "all", label: "All Assets" },
+            { id: "ward", label: "🏛️ Municipal Wards (incl. Ward 50)" },
+            { id: "panchayat", label: "🌾 Gram Panchayats" },
+            { id: "tourist", label: "✨ Tourist Landmarks" },
+            { id: "road", label: "🛣️ Roads & Expressways" },
+            { id: "power", label: "⚡ Power Stations" },
+            { id: "emergency", label: "🚒 Police & Fire" },
+          ].map((c) => {
+            const active = categoryFilter === c.id;
+            return (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => setCategoryFilter(c.id as typeof categoryFilter)}
+                className={`rounded-xl border px-3 py-1.5 font-bold transition ${
+                  active
+                    ? isGovt
+                      ? "border-[#004085] bg-[#004085] text-white shadow-sm"
+                      : "border-cyan-400 bg-cyan-400/20 text-cyan-300 shadow-sm"
+                    : isGovt
+                    ? "border-gray-300 bg-white text-gray-700 hover:bg-gray-100"
+                    : "border-white/10 bg-white/5 text-slate-300 hover:text-white hover:bg-white/10"
+                }`}
+              >
+                {c.label}
+              </button>
+            );
+          })}
         </div>
 
         {/* Table view */}

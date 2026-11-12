@@ -194,7 +194,7 @@ export default function AdminPage() {
               <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider ${
                 isGovt ? "bg-[#0a5c9e]/10 text-[#0a5c9e]" : "bg-cyan-400/10 text-cyan-300 border border-cyan-400/20"
               }`}>
-                <Crown size={12} /> Directorate of Urban Development · Govt. of Tripura
+                <Crown size={12} /> Directorate of Urban Development · Demo Operations Portal
               </span>
             </div>
             <h1 className={`text-3xl font-black mt-2 sm:text-4xl ${isGovt ? "text-[#0d1b2a]" : "text-white"}`}>
@@ -381,8 +381,27 @@ export default function AdminPage() {
                                         <Crown size={13} className="text-amber-400" />
                                       )}
                                     </p>
-                                    <p className="text-xs text-gray-400">{u.designation || u.role}</p>
-                                    <p className="text-[11px] text-cyan-400/80 font-mono">{u.email}</p>
+                                    <p className={`text-xs ${isGovt ? "text-slate-600 font-semibold" : "text-gray-400"}`}>
+                                      {u.designation || u.role}
+                                    </p>
+                                    <div className="flex items-center gap-1.5 mt-1 text-[10px]">
+                                      <span className={`px-1.5 py-0.5 rounded font-semibold ${
+                                        isGovt ? "bg-slate-100 text-slate-700 border border-slate-300" : "bg-white/5 text-slate-300 border border-white/10"
+                                      }`}>
+                                        {u.gender || "Male"}
+                                      </span>
+                                      <span className={`px-1.5 py-0.5 rounded font-semibold capitalize ${
+                                        isGovt ? "bg-slate-100 text-slate-700 border border-slate-300" : "bg-white/5 text-slate-300 border border-white/10"
+                                      }`}>
+                                        {u.marital_status || "Married"}
+                                      </span>
+                                    </div>
+                                    <p className={`text-[11px] font-mono mt-1 ${isGovt ? "text-[#004085] font-bold" : "text-cyan-400/80"}`}>
+                                      {u.email}
+                                    </p>
+                                    <p className={`text-[11px] font-mono ${isGovt ? "text-slate-700 font-medium" : "text-gray-400"}`}>
+                                      {u.phone}
+                                    </p>
                                   </div>
                                 </div>
                               </td>
@@ -484,13 +503,21 @@ export default function AdminPage() {
                         </button>
 
                         <div className="flex items-center gap-2 mb-4">
-                          <span className="badge text-xs font-bold uppercase tracking-wider text-cyan-300 border-cyan-400/30 bg-cyan-400/10">
-                            Government of Tripura · Official Personnel Dossier
+                          <span className={`badge text-xs font-bold uppercase tracking-wider ${
+                            isGovt
+                              ? "bg-blue-100 text-[#004085] border border-blue-200"
+                              : "text-cyan-300 border-cyan-400/30 bg-cyan-400/10"
+                          }`}>
+                            Civic Operations Intelligence · Personnel Dossier [Demo]
                           </span>
                         </div>
 
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 border-b pb-6 border-white/10">
-                          <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl border-2 border-cyan-400/50 shadow-xl bg-slate-800">
+                        <div className={`flex flex-col sm:flex-row items-start sm:items-center gap-5 border-b pb-6 ${
+                          isGovt ? "border-gray-200" : "border-white/10"
+                        }`}>
+                          <div className={`relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl border-2 shadow-xl ${
+                            isGovt ? "border-[#004085]/40 bg-slate-100" : "border-cyan-400/50 bg-slate-800"
+                          }`}>
                             {selectedOfficer.avatar ? (
                               <img
                                 src={selectedOfficer.avatar}
@@ -503,13 +530,13 @@ export default function AdminPage() {
                             </div>
                           </div>
                           <div className="flex-1">
-                            <h3 className="text-2xl font-black">{selectedOfficer.name}</h3>
-                            <p className="text-sm text-cyan-400 font-semibold">{selectedOfficer.designation || selectedOfficer.role}</p>
-                            <p className="text-xs text-gray-400 mt-1">{selectedOfficer.department}</p>
+                            <h3 className={`text-2xl font-black ${isGovt ? "text-slate-900" : "text-white"}`}>{selectedOfficer.name}</h3>
+                            <p className={`text-sm font-semibold ${isGovt ? "text-[#004085]" : "text-cyan-400"}`}>{selectedOfficer.designation || selectedOfficer.role}</p>
+                            <p className={`text-xs mt-1 ${isGovt ? "text-slate-600" : "text-gray-400"}`}>{selectedOfficer.department}</p>
                           </div>
                           <div>
                             {selectedOfficer.active ? (
-                              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 text-xs font-bold text-emerald-300">
+                              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 text-xs font-bold text-emerald-400">
                                 <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" /> Active Commission
                               </span>
                             ) : (
@@ -521,50 +548,97 @@ export default function AdminPage() {
                         </div>
 
                         {/* Dossier Information Grid */}
-                        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                          <div className="rounded-xl border border-white/10 bg-white/5 p-3.5 space-y-1">
-                            <span className="text-gray-400 font-medium">Official Employee Code</span>
-                            <p className="font-mono text-sm font-bold text-cyan-300">{selectedOfficer.employee_id || `TR-EMP-${selectedOfficer.id}`}</p>
-                          </div>
-                          <div className="rounded-xl border border-white/10 bg-white/5 p-3.5 space-y-1">
-                            <span className="text-gray-400 font-medium">Security Clearance</span>
-                            <p className="font-bold text-emerald-300">{selectedOfficer.clearance || "Tier 1 — Field Operator"}</p>
-                          </div>
-                          <div className="rounded-xl border border-white/10 bg-white/5 p-3.5 space-y-1">
-                            <span className="text-gray-400 font-medium">Official Registered Email</span>
-                            <p className="font-mono text-xs font-bold text-white break-all flex items-center gap-1.5">
-                              <Mail size={13} className="text-cyan-400 shrink-0" /> {selectedOfficer.email}
+                        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
+                          <div className={`rounded-xl border p-3.5 space-y-1 ${
+                            isGovt ? "border-slate-200 bg-slate-50" : "border-white/10 bg-white/5"
+                          }`}>
+                            <span className={isGovt ? "text-slate-500 font-semibold" : "text-gray-400 font-medium"}>Official Employee Code</span>
+                            <p className={`font-mono text-sm font-black ${isGovt ? "text-[#004085]" : "text-cyan-300"}`}>
+                              {selectedOfficer.employee_id || `TR-EMP-${selectedOfficer.id}`}
                             </p>
                           </div>
-                          <div className="rounded-xl border border-white/10 bg-white/5 p-3.5 space-y-1">
-                            <span className="text-gray-400 font-medium">Government Official Mobile</span>
-                            <p className="font-mono text-xs font-bold text-white flex items-center gap-1.5">
-                              <Phone size={13} className="text-cyan-400 shrink-0" /> {selectedOfficer.phone || "+91 94361-XXXXX"}
+
+                          <div className={`rounded-xl border p-3.5 space-y-1 ${
+                            isGovt ? "border-slate-200 bg-slate-50" : "border-white/10 bg-white/5"
+                          }`}>
+                            <span className={isGovt ? "text-slate-500 font-semibold" : "text-gray-400 font-medium"}>Security Clearance</span>
+                            <p className={`font-bold ${isGovt ? "text-emerald-800" : "text-emerald-300"}`}>
+                              {selectedOfficer.clearance || "Tier 1 — Field Operator"}
                             </p>
                           </div>
-                          <div className="rounded-xl border border-white/10 bg-white/5 p-3.5 space-y-1">
-                            <span className="text-gray-400 font-medium">Headquarters / Station Post</span>
-                            <p className="font-semibold text-slate-200 flex items-center gap-1.5">
-                              <MapPin size={13} className="text-cyan-400 shrink-0" /> {selectedOfficer.station || "Agartala, Tripura"}
+
+                          <div className={`rounded-xl border p-3.5 space-y-1 ${
+                            isGovt ? "border-slate-200 bg-slate-50" : "border-white/10 bg-white/5"
+                          }`}>
+                            <span className={isGovt ? "text-slate-500 font-semibold" : "text-gray-400 font-medium"}>Gender &amp; Marital Status</span>
+                            <p className={`font-bold flex items-center gap-2 ${isGovt ? "text-slate-900" : "text-white"}`}>
+                              <span>{selectedOfficer.gender || "Male"}</span>
+                              <span className="opacity-30">•</span>
+                              <span className="capitalize">{selectedOfficer.marital_status || "Married"}</span>
                             </p>
                           </div>
-                          <div className="rounded-xl border border-white/10 bg-white/5 p-3.5 space-y-1">
-                            <span className="text-gray-400 font-medium">Commission Date &amp; Last Activity</span>
-                            <p className="font-semibold text-slate-200">
+
+                          <div className={`rounded-xl border p-3.5 space-y-1 ${
+                            isGovt ? "border-slate-200 bg-slate-50" : "border-white/10 bg-white/5"
+                          }`}>
+                            <span className={isGovt ? "text-slate-500 font-semibold" : "text-gray-400 font-medium"}>Commission Date &amp; Activity</span>
+                            <p className={`font-semibold ${isGovt ? "text-slate-800" : "text-slate-200"}`}>
                               {selectedOfficer.joined_date || "15 Jan 2024"} · ({selectedOfficer.last_login})
+                            </p>
+                          </div>
+
+                          <div className={`rounded-xl border p-3.5 space-y-1 sm:col-span-2 ${
+                            isGovt ? "border-slate-200 bg-slate-50" : "border-white/10 bg-white/5"
+                          }`}>
+                            <span className={isGovt ? "text-slate-500 font-semibold" : "text-gray-400 font-medium"}>Official Registered Email</span>
+                            <p className={`font-mono text-sm font-bold break-all flex items-center gap-2 ${
+                              isGovt ? "text-[#004085]" : "text-cyan-300"
+                            }`}>
+                              <Mail size={15} className={isGovt ? "text-[#004085] shrink-0" : "text-cyan-400 shrink-0"} />
+                              {selectedOfficer.email}
+                            </p>
+                          </div>
+
+                          <div className={`rounded-xl border p-3.5 space-y-1 sm:col-span-2 ${
+                            isGovt ? "border-slate-200 bg-slate-50" : "border-white/10 bg-white/5"
+                          }`}>
+                            <span className={isGovt ? "text-slate-500 font-semibold" : "text-gray-400 font-medium"}>Government Official Mobile</span>
+                            <p className={`font-mono text-sm font-bold flex items-center gap-2 ${
+                              isGovt ? "text-slate-900" : "text-white"
+                            }`}>
+                              <Phone size={15} className={isGovt ? "text-[#004085] shrink-0" : "text-cyan-400 shrink-0"} />
+                              {selectedOfficer.phone || "+91 94361-XXXXX"}
+                            </p>
+                          </div>
+
+                          <div className={`rounded-xl border p-3.5 space-y-1 sm:col-span-2 ${
+                            isGovt ? "border-slate-200 bg-slate-50" : "border-white/10 bg-white/5"
+                          }`}>
+                            <span className={isGovt ? "text-slate-500 font-semibold" : "text-gray-400 font-medium"}>Headquarters / Station Post</span>
+                            <p className={`font-semibold flex items-center gap-2 ${
+                              isGovt ? "text-slate-800" : "text-slate-200"
+                            }`}>
+                              <MapPin size={15} className={isGovt ? "text-[#004085] shrink-0" : "text-cyan-400 shrink-0"} />
+                              {selectedOfficer.station || "Agartala, Tripura"}
                             </p>
                           </div>
                         </div>
 
                         {/* Modal Action Footer */}
-                        <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-white/10 pt-5">
-                          <p className="text-[11px] text-gray-400">
+                        <div className={`mt-8 flex flex-col sm:flex-row items-center justify-between gap-3 border-t pt-5 ${
+                          isGovt ? "border-gray-200" : "border-white/10"
+                        }`}>
+                          <p className={`text-[11px] ${isGovt ? "text-slate-500" : "text-gray-400"}`}>
                             All personnel modifications are signed into the immutable PostGIS audit log.
                           </p>
                           <div className="flex items-center gap-3 w-full sm:w-auto">
                             <button
                               onClick={() => setSelectedOfficer(null)}
-                              className="w-full sm:w-auto rounded-xl border border-white/10 px-4 py-2.5 text-xs font-bold text-gray-300 hover:bg-white/5"
+                              className={`w-full sm:w-auto rounded-xl px-5 py-2.5 text-xs font-bold transition ${
+                                isGovt
+                                  ? "border border-slate-300 bg-slate-100 text-slate-800 hover:bg-slate-200 shadow-xs"
+                                  : "border border-white/10 text-gray-300 hover:bg-white/5"
+                              }`}
                             >
                               Close Dossier
                             </button>

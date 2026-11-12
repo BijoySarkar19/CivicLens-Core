@@ -105,13 +105,11 @@ export function Header({ publicSite = false }: { publicSite?: boolean }) {
                 </span>
               </div>
               <div
-                className={`text-[10px] uppercase tracking-[0.24em] ${
-                  isGovt ? "text-gray-500" : "text-slate-500"
+                className={`text-[10px] uppercase tracking-[0.2em] font-medium ${
+                  isGovt ? "text-gray-600" : "text-slate-400"
                 }`}
               >
-                {isGovt
-                  ? "त्रिपुरा सरकार · Govt. of Tripura"
-                  : "Tripura Operations"}
+                Smart Urban Governance · Demo Platform
               </div>
             </div>
           </Link>

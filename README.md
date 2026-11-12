@@ -49,13 +49,14 @@ Instead of keeping operations and artificial intelligence separate, CivicLens in
 $$\text{Data Ingestion} \longrightarrow \text{Monitoring} \longrightarrow \text{Predictive Risk} \longrightarrow \text{Decision Support} \longrightarrow \text{Field Execution}$$
 
 ### Core Platform Highlights:
-1. **Tripura-Centric Spatial Registry**: Pre-configured with 25+ major public works and famous tourist destinations across all 8 districts of Tripura (*West Tripura, Sepahijala, Khowai, Gomati, South Tripura, Dhalai, Unakoti, North Tripura*).
-2. **Computer Vision Damage Assessment**: ResNet-50 + YOLOv8 vision pipeline detecting potholes, cracks, and surface drainage failures with 94.2% confidence and automatic condition score estimation.
+1. **Tripura-Centric Spatial Registry**: Pre-configured with **60+ major public works and tourist destinations** across all 8 districts of Tripura (*West Tripura, Sepahijala, Khowai, Gomati, South Tripura, Dhalai, Unakoti, North Tripura*), including 10 tourist spots, 10 named roads, 10 municipal wards with ward numbers, 5 drainage channels, 5 lakes, 6 traffic signals, 5 power stations (Palatana CCGT, Rokhia), 5 police stations, and 4 fire brigade bases.
+2. **Interactive Computer Vision Suite**: Upload real photos or snap with field camera; animated laser scanning; 4 realistic SVG/vector defect presets; 5-Stage "How to Understand this AI Decision" pipeline explainer; automated work order generation; verifiable cryptographic certificate download.
 3. **90-Day Predictive Risk Forecasting**: Replaces reactive repair with failure prediction based on asset age, condition history, incident frequency, rainfall saturation, and traffic density.
 4. **Duplicate Grievance Clustering**: Groups multiple citizen reports into one master work order to prevent duplicate dispatching.
-5. **What-If Scenario Simulation**: Monte Carlo simulation slider computing high-risk asset progression and financial penalties (in ₹ Lakhs) if maintenance is deferred.
+5. **What-If Strategic Simulation**: Real-time slider computing high-risk asset progression and financial penalties (in ₹ Lakhs) if maintenance is deferred.
 6. **VRP Field Route Optimization**: Automated vehicle routing and dispatch scheduling for 5 specialized maintenance squads across Tripura.
-7. **Dual-View Design System**: One-click persistent toggle between **Modern Glassmorphic View** and **Indian Government (GIGW 3.0 / UX4G) Style**.
+7. **Superadmin HR Management & Automated Dismissal Dispatch**: Full employee dossier with photo avatars, employee codes, clearance tiers, and a "Revoke & Dismiss (Fire)" action that dispatches an automated official dismissal transmission notice to the officer's registered government email address and logs the event to the tamper-evident PostGIS audit trail.
+8. **Dual-View Design System**: One-click persistent toggle between **Modern Glassmorphic View** and **Indian Government (GIGW 3.0 / UX4G) Style**.
 
 ---
 

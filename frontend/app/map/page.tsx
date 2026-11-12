@@ -1,7 +1,8 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { MapPinned, Layers, Info, MapPin } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { Asset, TRIPURA_SEED_ASSETS } from "@/lib/types";
@@ -13,10 +14,13 @@ const MapClient = dynamic(
   { ssr: false, loading: () => <div className="skeleton h-[70vh] rounded-2xl" /> }
 );
 
-export default function MapPage() {
+function MapPageContent() {
   const [assets, setAssets] = useState<Asset[]>(TRIPURA_SEED_ASSETS);
   const [selectedDistrict, setSelectedDistrict] = useState("All");
   const { isGovt } = useGovtMode();
+  const searchParams = useSearchParams();
+  const rawAssetId = searchParams.get("assetId");
+  const selectedAssetId = rawAssetId ? Number(rawAssetId) : null;
 
   useEffect(() => {
     apiFetch<{ items: Asset[] }>("/assets/?limit=500")
@@ -29,6 +33,10 @@ export default function MapPage() {
         setAssets(TRIPURA_SEED_ASSETS);
       });
   }, []);
+
+  const focusedAsset = selectedAssetId
+    ? assets.find((a) => a.id === selectedAssetId)
+    : null;
 
   const filtered =
     selectedDistrict === "All"
@@ -88,12 +96,26 @@ export default function MapPage() {
           </div>
         </div>
 
+        {focusedAsset && (
+          <div className={`mt-4 rounded-xl border p-3.5 flex items-center justify-between text-xs font-bold ${
+            isGovt ? "border-blue-300 bg-blue-50 text-blue-900" : "border-cyan-400/30 bg-cyan-400/10 text-cyan-200"
+          }`}>
+            <span className="flex items-center gap-2">
+              <span className="flex h-2.5 w-2.5 rounded-full bg-red-500 animate-ping" />
+              Focusing Asset: <strong>{focusedAsset.name}</strong> ({focusedAsset.asset_code}) · {focusedAsset.district}
+            </span>
+            <span className="badge font-mono text-[10px] bg-red-500 text-white border-0 font-black">
+              LAT {focusedAsset.latitude?.toFixed(4)}, LNG {focusedAsset.longitude?.toFixed(4)}
+            </span>
+          </div>
+        )}
+
         <p className={`mt-2 text-sm ${muteColor}`}>
           Geolocated public assets rendered on OpenStreetMap tiles centered on Tripura. Click any pinpoint marker to inspect asset code, municipality, and condition.
         </p>
 
         <div className="mt-6" role="region" aria-label="Interactive map of Tripura infrastructure">
-          <MapClient assets={filtered} />
+          <MapClient assets={filtered} selectedAssetId={selectedAssetId} />
         </div>
 
         <p className={`mt-3 text-xs ${muteColor}`}>
@@ -101,5 +123,13 @@ export default function MapPage() {
         </p>
       </section>
     </PageShell>
+  );
+}
+
+export default function MapPage() {
+  return (
+    <Suspense fallback={<div className="skeleton min-h-screen" />}>
+      <MapPageContent />
+    </Suspense>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import dynamic from "next/dynamic";
 import { Boxes, Search, MapPin, TrendingUp, Layers } from "lucide-react";
 import { apiFetch } from "@/lib/api";
@@ -253,6 +254,7 @@ export default function AssetsPage() {
                     <th className="px-4 py-4" scope="col">City / Locality</th>
                     <th className="px-4 py-4" scope="col">Condition</th>
                     <th className="px-4 py-4" scope="col">Coordinates</th>
+                    <th className="px-4 py-4" scope="col">GIS Map</th>
                     <th className="px-4 py-4" scope="col">Department</th>
                   </tr>
                 </thead>
@@ -299,6 +301,20 @@ export default function AssetsPage() {
                         {x.latitude && x.longitude
                           ? `${x.latitude.toFixed(4)}, ${x.longitude.toFixed(4)}`
                           : "—"}
+                      </td>
+                      <td className="px-4 py-4">
+                        <Link
+                          href={`/map?assetId=${x.id}&lat=${x.latitude}&lng=${x.longitude}`}
+                          className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold transition whitespace-nowrap ${
+                            isGovt
+                              ? "bg-blue-50 text-[#0a5c9e] border border-blue-200 hover:bg-blue-100 shadow-xs"
+                              : "bg-cyan-400/10 text-cyan-300 border border-cyan-400/20 hover:bg-cyan-400/20"
+                          }`}
+                          aria-label={`Locate ${x.name} on Tripura GIS Map`}
+                        >
+                          <MapPin size={11} aria-hidden="true" />
+                          <span>View on GIS →</span>
+                        </Link>
                       </td>
                       <td className={`px-4 py-4 text-xs ${muteColor}`}>
                         {x.source_name ?? "Tripura PWD"}
@@ -363,6 +379,18 @@ export default function AssetsPage() {
                     {x.latitude?.toFixed(2)}°N, {x.longitude?.toFixed(2)}°E
                   </span>
                 </div>
+                <Link
+                  href={`/map?assetId=${x.id}&lat=${x.latitude}&lng=${x.longitude}`}
+                  className={`mt-4 inline-flex items-center justify-center gap-1.5 w-full rounded-xl py-2 text-xs font-bold transition ${
+                    isGovt
+                      ? "bg-blue-50 text-[#0a5c9e] border border-blue-200 hover:bg-blue-100 shadow-xs"
+                      : "bg-cyan-400/10 text-cyan-300 border border-cyan-400/20 hover:bg-cyan-400/20"
+                  }`}
+                  aria-label={`View ${x.name} on GIS map`}
+                >
+                  <MapPin size={13} aria-hidden="true" />
+                  <span>Locate on Interactive GIS Map →</span>
+                </Link>
               </div>
             ))}
           </div>

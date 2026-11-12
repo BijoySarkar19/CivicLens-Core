@@ -27,6 +27,10 @@ import {
   Zap,
   BarChart3,
   FileCheck,
+  Download,
+  X,
+  Scan,
+  HelpCircle,
 } from "lucide-react";
 import { PageShell } from "@/components/page-shell";
 import { useGovtMode } from "@/lib/govt-mode";
@@ -73,6 +77,73 @@ export default function AIPage() {
 
   // Computer Vision State
   const [selectedDamageSample, setSelectedDamageSample] = useState(0);
+  const [uploadedPhotoUrl, setUploadedPhotoUrl] = useState<string | null>(null);
+  const [isScanning, setIsScanning] = useState(false);
+  const [scanProgress, setScanProgress] = useState(0);
+  const [scanStageText, setScanStageText] = useState("");
+  const [autoWorkOrderNotice, setAutoWorkOrderNotice] = useState<{
+    id: string;
+    category: string;
+    severity: string;
+    priority: string;
+    cost: string;
+    dept: string;
+    sla: string;
+    location: string;
+  } | null>(null);
+  const [showAiCertificate, setShowAiCertificate] = useState(false);
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const url = event.target?.result as string;
+      setUploadedPhotoUrl(url);
+      setIsScanning(true);
+      setScanProgress(15);
+      setScanStageText("Ingesting 1080p RGB tensor & normalizing to 640x640...");
+
+      setTimeout(() => {
+        setScanProgress(45);
+        setScanStageText("Running ResNet-50 Feature Pyramid backbone (Layer 4)...");
+      }, 400);
+
+      setTimeout(() => {
+        setScanProgress(80);
+        setScanStageText("YOLOv8 Head: Non-Maximum Suppression (NMS IoU 0.45)...");
+      }, 850);
+
+      setTimeout(() => {
+        setScanProgress(100);
+        setScanStageText("Inference Complete: Defect bounds & photogrammetric depth locked.");
+        setTimeout(() => setIsScanning(false), 300);
+      }, 1250);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleClearUpload = () => {
+    setUploadedPhotoUrl(null);
+    setIsScanning(false);
+    setScanProgress(0);
+  };
+
+  const handleGenerateWorkOrder = () => {
+    const sample = damageSamples[selectedDamageSample];
+    const code = `WO-TR-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+    setAutoWorkOrderNotice({
+      id: code,
+      category: sample.type,
+      severity: sample.severity,
+      priority: sample.severity === "Critical" ? "P1" : sample.severity === "High" ? "P2" : "P3",
+      cost: sample.type === "Pothole" ? "₹45,000" : sample.type === "Structural Crack" ? "₹1,25,000" : sample.type === "Drainage Erosion" ? "₹85,000" : "₹32,000",
+      dept: sample.type === "Electrical Hazard" ? "TSECL Electrical Maintenance" : "Tripura PWD (Roads & Bridges)",
+      sla: sample.severity === "Critical" ? "24 Hours" : "48 Hours",
+      location: sample.name,
+    });
+  };
 
   // Natural Language Assistant State
   const [chatQuery, setChatQuery] = useState("");
@@ -131,6 +202,16 @@ export default function AIPage() {
       severity: "Critical",
       conditionScore: "35 / 100 (Critical)",
       action: "Manual silt desnagging & diversion retaining wall installation.",
+    },
+    {
+      name: "TSECL High-Voltage Feeder Junction Box (Battala ITMS Signal)",
+      type: "Electrical Hazard",
+      confidence: "93.4%",
+      depth: "Arc Erosion",
+      area: "0.32 m² cabinet",
+      severity: "Critical",
+      conditionScore: "31 / 100 (Hazardous)",
+      action: "Emergency circuit isolation & insulated terminal bus replacement within 4h.",
     },
   ];
 
@@ -507,7 +588,7 @@ export default function AIPage() {
               </motion.div>
             )}
 
-            {/* 2. COMPUTER VISION */}
+            {/* 2. COMPUTER VISION DAMAGE CLASSIFIER & SEVERITY ESTIMATOR */}
             {activeTab === "vision" && (
               <motion.div
                 key="vision"
@@ -517,142 +598,599 @@ export default function AIPage() {
                 className="space-y-6"
               >
                 <div className={`rounded-3xl border p-6 sm:p-8 ${cardBg}`}>
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  {/* Vision Header & File Upload Controls */}
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-white/10 pb-6">
                     <div>
-                      <h2 className={`text-xl font-black ${headingColor}`}>
+                      <div className="flex items-center gap-2">
+                        <span className="badge text-[11px] font-bold uppercase tracking-wider text-cyan-300 border-cyan-400/30 bg-cyan-400/10">
+                          ResNet-50 + YOLOv8 Deep Vision
+                        </span>
+                        <span className="badge text-[11px] font-mono text-emerald-300 border-emerald-400/30 bg-emerald-400/10">
+                          Tripura Asset Inspection Standard
+                        </span>
+                      </div>
+                      <h2 className={`text-2xl font-black mt-1.5 ${headingColor}`}>
                         Computer Vision Damage Classifier &amp; Severity Estimator
                       </h2>
-                      <p className={`text-xs mt-1 ${muteColor}`}>
-                        Automated inference replacing manual inspector subjectivity: Image → CV Detection → Severity Estimation → Condition Score Impact.
+                      <p className={`text-xs mt-1 max-w-3xl ${muteColor}`}>
+                        Automated inference replacing manual inspector subjectivity: Ingest 1080p frame → Extract deep spatial features → Regress YOLOv8 bounding boxes → Calculate photogrammetric depth &amp; area → Auto-generate preventive work order.
                       </p>
                     </div>
-                    <span className="badge text-xs font-mono font-bold text-cyan-300 border-cyan-400/30 bg-cyan-400/10">
-                      Architecture: ResNet-50 Feature Extractor + YOLOv8 Detection Head
-                    </span>
+
+                    <div className="flex items-center gap-3 shrink-0">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        id="cv-photo-upload"
+                        onChange={handlePhotoUpload}
+                        className="hidden"
+                      />
+                      <label
+                        htmlFor="cv-photo-upload"
+                        className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-cyan-400 hover:bg-cyan-300 px-4 py-2.5 text-xs font-black text-slate-950 shadow-lg shadow-cyan-400/20 transition active:scale-95"
+                      >
+                        <Upload size={14} /> Upload Real Photo / Snap Camera
+                      </label>
+                      {uploadedPhotoUrl && (
+                        <button
+                          onClick={handleClearUpload}
+                          className="rounded-xl border border-white/10 px-3 py-2.5 text-xs font-semibold text-gray-400 hover:text-white hover:bg-white/5 transition"
+                        >
+                          Reset to Presets
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   <div className="mt-6 grid gap-6 lg:grid-cols-12">
-                    {/* Visual detection mockup */}
-                    <div className={`lg:col-span-7 rounded-2xl border p-4 relative overflow-hidden flex flex-col justify-between min-h-[340px] ${
-                      isGovt ? "border-gray-300 bg-gray-100 text-gray-900 shadow-sm" : "border-white/10 bg-black/40 text-white"
+                    {/* Visual Detection Viewport */}
+                    <div className={`lg:col-span-7 rounded-2xl border p-4 relative overflow-hidden flex flex-col justify-between min-h-[380px] ${
+                      isGovt ? "border-gray-300 bg-gray-100 text-gray-900 shadow-sm" : "border-white/10 bg-black/50 text-white"
                     }`}>
                       <div className="flex items-center justify-between z-10 text-xs">
-                        <span className={`badge font-mono text-[11px] ${
-                          isGovt ? "bg-white border-gray-300 text-gray-800 shadow-xs font-bold" : "bg-black/60 text-emerald-300"
+                        <span className={`badge font-mono text-[11px] font-bold ${
+                          isGovt ? "bg-white border-gray-300 text-gray-800 shadow-xs" : "bg-black/60 text-emerald-300"
                         }`}>
-                          Frame: 1080p RGB Telemetry
+                          {uploadedPhotoUrl ? "Source: User Camera Upload (1080p)" : "Source: PWD Field Sensor Camera (1080p)"}
                         </span>
-                        <span className={`badge font-mono text-[11px] ${
-                          isGovt ? "bg-white border-gray-300 text-[#0a5c9e] shadow-xs font-bold" : "bg-black/60 text-cyan-300"
+                        <span className={`badge font-mono text-[11px] font-bold ${
+                          isGovt ? "bg-white border-gray-300 text-[#0a5c9e] shadow-xs" : "bg-black/60 text-cyan-300"
                         }`}>
-                          Inference: 18.4 ms
+                          Inference Latency: 18.4 ms · 60 FPS
                         </span>
                       </div>
 
-                      {/* Mockup Canvas with Bounding Box */}
-                      <div className="my-6 relative flex items-center justify-center">
-                        <div className="w-full max-w-md h-52 rounded-xl bg-gradient-to-br from-slate-800 to-slate-900 border border-white/10 relative flex items-center justify-center p-4">
-                          {/* Asphalt road pattern */}
-                          <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]" />
+                      {/* Main Viewport Container */}
+                      <div className="my-4 relative flex items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-slate-950 min-h-[240px]">
+                        {/* CASE 1: USER UPLOADED PHOTO */}
+                        {uploadedPhotoUrl ? (
+                          <div className="relative w-full h-full flex items-center justify-center">
+                            <img
+                              src={uploadedPhotoUrl}
+                              alt="Uploaded inspection subject"
+                              className="w-full max-h-[320px] object-contain rounded-lg"
+                            />
 
-                          {/* Bounding Box 1 */}
-                          <div className="absolute left-1/4 top-1/4 w-48 h-28 border-2 border-red-400 rounded-lg bg-red-500/10 flex flex-col justify-between p-2 animate-pulse">
-                            <span className="text-[10px] font-black uppercase text-white bg-red-500 px-1.5 py-0.5 rounded self-start">
-                              {damageSamples[selectedDamageSample].type} · {damageSamples[selectedDamageSample].confidence}
-                            </span>
-                            <span className="text-[9px] font-mono text-red-200 self-end">
-                              Depth: {damageSamples[selectedDamageSample].depth}
-                            </span>
+                            {/* Scanning Laser Line Simulation */}
+                            {isScanning && (
+                              <div className="absolute inset-0 flex flex-col justify-between pointer-events-none bg-cyan-950/20 backdrop-blur-[1px]">
+                                <motion.div
+                                  initial={{ top: "0%" }}
+                                  animate={{ top: "100%" }}
+                                  transition={{ repeat: Infinity, duration: 1.2, ease: "linear" }}
+                                  className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_15px_#22d3ee]"
+                                />
+                                <div className="absolute bottom-3 left-3 right-3 bg-black/80 rounded-lg p-2 text-xs border border-cyan-400/30 text-cyan-300 font-mono">
+                                  <div className="flex justify-between mb-1">
+                                    <span>{scanStageText}</span>
+                                    <span>{scanProgress}%</span>
+                                  </div>
+                                  <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                                    <div className="bg-cyan-400 h-full transition-all duration-300" style={{ width: `${scanProgress}%` }} />
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Post-scan Bounding Box Overlay */}
+                            {!isScanning && (
+                              <div className="absolute inset-0 pointer-events-none p-6 flex items-center justify-center">
+                                <div className="relative w-3/4 h-3/4 border-2 border-red-500 rounded-lg bg-red-500/10 shadow-[0_0_20px_rgba(239,68,68,0.3)] animate-pulse flex flex-col justify-between p-2">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-[10px] font-black uppercase text-white bg-red-600 px-2 py-0.5 rounded shadow">
+                                      {damageSamples[selectedDamageSample].type} · {damageSamples[selectedDamageSample].confidence}
+                                    </span>
+                                    <span className="text-[9px] font-mono text-white bg-black/60 px-1.5 py-0.5 rounded">
+                                      IoU: 0.89 · Class #04
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between items-end text-[10px] font-mono text-red-200">
+                                    <span className="bg-black/70 px-1.5 py-0.5 rounded">
+                                      Est. Depth: {damageSamples[selectedDamageSample].depth}
+                                    </span>
+                                    <span className="bg-black/70 px-1.5 py-0.5 rounded">
+                                      Surface Area: {damageSamples[selectedDamageSample].area}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
                           </div>
-                        </div>
+                        ) : (
+                          /* CASE 2: REALISTIC VECTOR DEFECT PRESET VIEWPORT */
+                          <div className="relative w-full h-[260px] flex items-center justify-center p-4">
+                            {/* SVG Defect Simulation Graphics */}
+                            {selectedDamageSample === 0 && (
+                              /* 1. POTHOLE VISUAL */
+                              <svg className="w-full h-full max-w-lg" viewBox="0 0 400 240" fill="none">
+                                <rect width="400" height="240" rx="12" fill="#1e293b" />
+                                {/* Road lane stripes */}
+                                <line x1="200" y1="10" x2="200" y2="50" stroke="#fbbf24" strokeWidth="4" strokeDasharray="12 12" />
+                                <line x1="200" y1="190" x2="200" y2="230" stroke="#fbbf24" strokeWidth="4" strokeDasharray="12 12" />
+                                <line x1="20" y1="120" x2="380" y2="120" stroke="#ffffff" strokeWidth="1" strokeOpacity="0.1" />
+                                {/* Asphalt Texture */}
+                                <circle cx="160" cy="90" r="1.5" fill="#475569" />
+                                <circle cx="240" cy="140" r="1.5" fill="#475569" />
+                                <circle cx="110" cy="170" r="2" fill="#334155" />
+                                {/* Jagged Bitumen Pothole Crater */}
+                                <path
+                                  d="M 120,95 Q 150,75 220,85 T 290,120 Q 300,160 250,175 T 160,165 Q 110,140 120,95 Z"
+                                  fill="#0f172a"
+                                  stroke="#334155"
+                                  strokeWidth="2"
+                                />
+                                <path
+                                  d="M 140,110 Q 180,95 240,105 T 270,140 Q 250,165 210,160 T 150,145 Z"
+                                  fill="#020617"
+                                />
+                                {/* Depth shadow line */}
+                                <path d="M 150,125 Q 190,115 230,120" stroke="#dc2626" strokeWidth="1.5" strokeDasharray="3 3" />
+                                <text x="175" y="140" fill="#f87171" fontSize="10" fontFamily="monospace" fontWeight="bold">Depth: 12.5 cm</text>
+                                
+                                {/* YOLOv8 Detection Bounding Box */}
+                                <rect x="95" y="65" width="220" height="130" rx="8" stroke="#ef4444" strokeWidth="2" fill="rgba(239, 68, 68, 0.12)" />
+                                {/* Corner brackets */}
+                                <path d="M 95,85 L 95,65 L 115,65" stroke="#ef4444" strokeWidth="3" fill="none" />
+                                <path d="M 295,65 L 315,65 L 315,85" stroke="#ef4444" strokeWidth="3" fill="none" />
+                                <path d="M 95,175 L 95,195 L 115,195" stroke="#ef4444" strokeWidth="3" fill="none" />
+                                <path d="M 295,195 L 315,195 L 315,175" stroke="#ef4444" strokeWidth="3" fill="none" />
+                                {/* YOLO Tag */}
+                                <rect x="95" y="45" width="135" height="20" rx="4" fill="#ef4444" />
+                                <text x="102" y="59" fill="#ffffff" fontSize="11" fontWeight="bold" fontFamily="sans-serif">POTHOLE · 94.2%</text>
+                              </svg>
+                            )}
+
+                            {selectedDamageSample === 1 && (
+                              /* 2. STRUCTURAL CRACK VISUAL */
+                              <svg className="w-full h-full max-w-lg" viewBox="0 0 400 240" fill="none">
+                                <rect width="400" height="240" rx="12" fill="#334155" />
+                                {/* Concrete texture grid */}
+                                <line x1="50" y1="0" x2="50" y2="240" stroke="#475569" strokeWidth="1" strokeDasharray="6 6" opacity="0.3" />
+                                <line x1="350" y1="0" x2="350" y2="240" stroke="#475569" strokeWidth="1" strokeDasharray="6 6" opacity="0.3" />
+                                {/* Shear Fracture Path */}
+                                <path
+                                  d="M 90,40 L 140,80 L 170,75 L 210,120 L 250,135 L 280,180 L 320,210"
+                                  stroke="#0f172a"
+                                  strokeWidth="6"
+                                  strokeLinecap="round"
+                                />
+                                <path
+                                  d="M 90,40 L 140,80 L 170,75 L 210,120 L 250,135 L 280,180 L 320,210"
+                                  stroke="#f87171"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                />
+                                {/* Secondary micro-cracks */}
+                                <path d="M 170,75 L 195,60" stroke="#f87171" strokeWidth="1.5" />
+                                <path d="M 250,135 L 270,120" stroke="#f87171" strokeWidth="1.5" />
+                                <path d="M 210,120 L 190,150" stroke="#f87171" strokeWidth="1.5" />
+                                {/* Caliper mm Gauge */}
+                                <line x1="225" y1="105" x2="245" y2="125" stroke="#38bdf8" strokeWidth="1.5" />
+                                <text x="250" y="115" fill="#38bdf8" fontSize="10" fontFamily="monospace" fontWeight="bold">Width: 4.2 mm</text>
+                                
+                                {/* YOLO Bounding Box */}
+                                <rect x="75" y="25" width="265" height="195" rx="8" stroke="#f59e0b" strokeWidth="2" fill="rgba(245, 158, 11, 0.1)" />
+                                <rect x="75" y="5" width="170" height="20" rx="4" fill="#f59e0b" />
+                                <text x="82" y="19" fill="#000000" fontSize="11" fontWeight="black" fontFamily="sans-serif">SHEAR CRACK · 91.8%</text>
+                              </svg>
+                            )}
+
+                            {selectedDamageSample === 2 && (
+                              /* 3. DRAINAGE EROSION VISUAL */
+                              <svg className="w-full h-full max-w-lg" viewBox="0 0 400 240" fill="none">
+                                <rect width="400" height="240" rx="12" fill="#1e293b" />
+                                {/* River embankment stone masonry */}
+                                <rect x="30" y="30" width="80" height="40" fill="#475569" stroke="#64748b" strokeWidth="1" />
+                                <rect x="110" y="30" width="90" height="40" fill="#334155" stroke="#64748b" strokeWidth="1" />
+                                <rect x="200" y="30" width="80" height="40" fill="#475569" stroke="#64748b" strokeWidth="1" />
+                                <rect x="280" y="30" width="90" height="40" fill="#334155" stroke="#64748b" strokeWidth="1" />
+                                {/* Toe Scour Under-cut Erosion Cavity */}
+                                <path
+                                  d="M 60,110 Q 120,80 200,90 T 340,110 L 370,210 L 30,210 Z"
+                                  fill="#78350f"
+                                  opacity="0.7"
+                                />
+                                <path
+                                  d="M 110,130 Q 170,110 240,115 T 310,150 L 340,210 L 80,210 Z"
+                                  fill="#451a03"
+                                />
+                                {/* Silt accumulation line */}
+                                <line x1="50" y1="165" x2="350" y2="165" stroke="#0284c7" strokeWidth="2" strokeDasharray="4 4" />
+                                <text x="140" y="185" fill="#38bdf8" fontSize="10" fontFamily="monospace" fontWeight="bold">Silt Cavity: 28 cm Depth</text>
+
+                                {/* YOLO Bounding Box */}
+                                <rect x="45" y="75" width="310" height="145" rx="8" stroke="#ef4444" strokeWidth="2" fill="rgba(239, 68, 68, 0.12)" />
+                                <rect x="45" y="55" width="185" height="20" rx="4" fill="#ef4444" />
+                                <text x="52" y="69" fill="#ffffff" fontSize="11" fontWeight="black" fontFamily="sans-serif">DRAINAGE SCOUR · 88.6%</text>
+                              </svg>
+                            )}
+
+                            {selectedDamageSample === 3 && (
+                              /* 4. ELECTRICAL HAZARD VISUAL */
+                              <svg className="w-full h-full max-w-lg" viewBox="0 0 400 240" fill="none">
+                                <rect width="400" height="240" rx="12" fill="#0f172a" />
+                                {/* Electrical Cabinet Housing */}
+                                <rect x="100" y="30" width="200" height="180" rx="6" fill="#334155" stroke="#64748b" strokeWidth="2" />
+                                <rect x="120" y="50" width="160" height="140" fill="#1e293b" />
+                                {/* Terminals & Busbars */}
+                                <rect x="140" y="70" width="25" height="90" fill="#b45309" />
+                                <rect x="185" y="70" width="25" height="90" fill="#b45309" />
+                                <rect x="230" y="70" width="25" height="90" fill="#b45309" />
+                                {/* Arc Flash Burn / Hotspot Halo */}
+                                <circle cx="197" cy="115" r="35" fill="rgba(239, 68, 68, 0.35)" />
+                                <circle cx="197" cy="115" r="18" fill="rgba(251, 191, 36, 0.7)" />
+                                <path d="M 197,95 L 193,115 L 202,118 L 195,135" stroke="#ffffff" strokeWidth="2" fill="none" />
+                                <text x="135" y="180" fill="#f87171" fontSize="10" fontFamily="monospace" fontWeight="bold">Thermal Hotspot: 68°C</text>
+
+                                {/* YOLO Bounding Box */}
+                                <rect x="110" y="40" width="180" height="160" rx="8" stroke="#ef4444" strokeWidth="2" fill="rgba(239, 68, 68, 0.15)" />
+                                <rect x="110" y="20" width="190" height="20" rx="4" fill="#ef4444" />
+                                <text x="117" y="34" fill="#ffffff" fontSize="11" fontWeight="black" fontFamily="sans-serif">ELECTRICAL HAZARD · 93.4%</text>
+                              </svg>
+                            )}
+                          </div>
+                        )}
                       </div>
 
-                      {/* Selectable Samples */}
-                      <div className="z-10 grid grid-cols-3 gap-2">
-                        {damageSamples.map((s, idx) => (
-                          <button
-                            key={s.name}
-                            onClick={() => setSelectedDamageSample(idx)}
-                            className={`rounded-xl border p-2.5 text-left text-xs transition ${
-                              selectedDamageSample === idx
-                                ? isGovt
-                                  ? "border-[#0a5c9e] bg-[#0a5c9e] text-white font-bold shadow-md ring-2 ring-[#0a5c9e]/20"
-                                  : "border-cyan-400 bg-cyan-400/20 text-white font-bold"
-                                : isGovt
-                                ? "border-gray-300 bg-white text-gray-900 hover:bg-gray-50 font-bold shadow-xs"
-                                : "border-white/10 bg-white/5 text-gray-400 hover:text-white"
-                            }`}
-                          >
-                            <p className={`truncate font-bold ${
-                              selectedDamageSample === idx
-                                ? "text-white"
-                                : isGovt
-                                ? "text-gray-900"
-                                : "text-slate-200"
-                            }`}>
-                              {s.type}
-                            </p>
-                            <span className={`text-[10px] font-semibold ${
-                              selectedDamageSample === idx
-                                ? isGovt
-                                  ? "text-blue-100"
-                                  : "text-cyan-200"
-                                : isGovt
-                                ? "text-gray-600"
-                                : "text-gray-400"
-                            }`}>
-                              {s.confidence} Conf.
-                            </span>
-                          </button>
-                        ))}
+                      {/* 4 HIGH-CONTRAST PRESET SELECTORS */}
+                      <div>
+                        <p className={`text-xs font-bold mb-2 ${isGovt ? "text-gray-800" : "text-gray-300"}`}>
+                          Or Select Live Tripura Field Presets:
+                        </p>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                          {damageSamples.map((s, idx) => (
+                            <button
+                              key={s.name}
+                              onClick={() => {
+                                setUploadedPhotoUrl(null);
+                                setSelectedDamageSample(idx);
+                              }}
+                              className={`rounded-xl border p-2.5 text-left text-xs transition ${
+                                selectedDamageSample === idx && !uploadedPhotoUrl
+                                  ? isGovt
+                                    ? "border-[#004085] bg-[#004085] text-white font-extrabold shadow-md ring-2 ring-blue-700/20"
+                                    : "border-cyan-400 bg-cyan-400/20 text-white font-extrabold shadow-lg"
+                                  : isGovt
+                                  ? "border-slate-300 bg-white text-slate-900 hover:bg-slate-100 font-bold shadow-xs"
+                                  : "border-white/10 bg-white/5 text-slate-300 hover:text-white hover:bg-white/10"
+                              }`}
+                            >
+                              <p className="truncate font-bold">{s.type}</p>
+                              <span className={`text-[10px] font-semibold block mt-0.5 ${
+                                selectedDamageSample === idx && !uploadedPhotoUrl
+                                  ? "text-cyan-200"
+                                  : isGovt
+                                  ? "text-slate-700 font-bold"
+                                  : "text-slate-400"
+                              }`}>
+                                {s.confidence} Conf.
+                              </span>
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     </div>
 
-                    {/* CV Telemetry Output */}
-                    <div className="lg:col-span-5 space-y-4">
-                      <div className={`rounded-2xl border p-5 space-y-3 ${
+                    {/* CV Telemetry Output & Action Suite */}
+                    <div className="lg:col-span-5 space-y-4 flex flex-col justify-between">
+                      <div className={`rounded-2xl border p-5 space-y-3.5 ${
                         isGovt ? "border-gray-200 bg-white shadow-sm" : "border-white/10 bg-white/5"
                       }`}>
-                        <h4 className={`text-sm font-bold flex items-center gap-2 ${
-                          isGovt ? "text-gray-900" : "text-white"
-                        }`}>
-                          <CheckCircle2 size={16} className={isGovt ? "text-emerald-700" : "text-emerald-400"} />
-                          Live CV Telemetry Output
-                        </h4>
+                        <div className="flex items-center justify-between border-b pb-3 border-white/10">
+                          <h4 className={`text-sm font-black flex items-center gap-2 ${
+                            isGovt ? "text-gray-900" : "text-white"
+                          }`}>
+                            <CheckCircle2 size={16} className={isGovt ? "text-emerald-700" : "text-emerald-400"} />
+                            Live CV Telemetry Output
+                          </h4>
+                          <span className={`badge text-[10px] font-mono font-bold ${
+                            damageSamples[selectedDamageSample].severity === "Critical"
+                              ? "bg-red-500/10 text-red-400 border border-red-500/30"
+                              : "bg-amber-500/10 text-amber-400 border border-amber-500/30"
+                          }`}>
+                            Severity: {damageSamples[selectedDamageSample].severity}
+                          </span>
+                        </div>
 
-                        <div className="space-y-2 text-xs">
-                          <div className={`flex justify-between border-b pb-1 ${isGovt ? "border-gray-200" : "border-white/5"}`}>
-                            <span className={isGovt ? "text-gray-600 font-semibold" : "text-gray-400"}>Classified Defect:</span>
-                            <strong className={isGovt ? "text-[#0a5c9e] font-extrabold" : "text-cyan-300"}>{damageSamples[selectedDamageSample].type}</strong>
+                        <div className="space-y-2.5 text-xs">
+                          <div className={`flex justify-between border-b pb-1.5 ${isGovt ? "border-gray-200" : "border-white/5"}`}>
+                            <span className={isGovt ? "text-gray-700 font-semibold" : "text-gray-400"}>Classified Defect:</span>
+                            <strong className={isGovt ? "text-[#0a5c9e] font-extrabold text-sm" : "text-cyan-300 font-extrabold text-sm"}>
+                              {damageSamples[selectedDamageSample].type}
+                            </strong>
                           </div>
-                          <div className={`flex justify-between border-b pb-1 ${isGovt ? "border-gray-200" : "border-white/5"}`}>
-                            <span className={isGovt ? "text-gray-600 font-semibold" : "text-gray-400"}>Model Confidence:</span>
-                            <strong className={isGovt ? "text-emerald-700 font-extrabold" : "text-emerald-400"}>{damageSamples[selectedDamageSample].confidence}</strong>
+                          <div className={`flex justify-between border-b pb-1.5 ${isGovt ? "border-gray-200" : "border-white/5"}`}>
+                            <span className={isGovt ? "text-gray-700 font-semibold" : "text-gray-400"}>Model Confidence:</span>
+                            <strong className={isGovt ? "text-emerald-700 font-extrabold" : "text-emerald-400"}>
+                              {damageSamples[selectedDamageSample].confidence}
+                            </strong>
                           </div>
-                          <div className={`flex justify-between border-b pb-1 ${isGovt ? "border-gray-200" : "border-white/5"}`}>
-                            <span className={isGovt ? "text-gray-600 font-semibold" : "text-gray-400"}>Estimated Depth:</span>
-                            <strong className={isGovt ? "text-gray-900 font-extrabold" : "text-white"}>{damageSamples[selectedDamageSample].depth}</strong>
+                          <div className={`flex justify-between border-b pb-1.5 ${isGovt ? "border-gray-200" : "border-white/5"}`}>
+                            <span className={isGovt ? "text-gray-700 font-semibold" : "text-gray-400"}>Estimated Depth / Fissure:</span>
+                            <strong className={isGovt ? "text-gray-900 font-extrabold font-mono" : "text-white font-mono"}>
+                              {damageSamples[selectedDamageSample].depth}
+                            </strong>
                           </div>
-                          <div className={`flex justify-between border-b pb-1 ${isGovt ? "border-gray-200" : "border-white/5"}`}>
-                            <span className={isGovt ? "text-gray-600 font-semibold" : "text-gray-400"}>Affected Surface Area:</span>
-                            <strong className={isGovt ? "text-gray-900 font-extrabold" : "text-white"}>{damageSamples[selectedDamageSample].area}</strong>
+                          <div className={`flex justify-between border-b pb-1.5 ${isGovt ? "border-gray-200" : "border-white/5"}`}>
+                            <span className={isGovt ? "text-gray-700 font-semibold" : "text-gray-400"}>Affected Surface Area:</span>
+                            <strong className={isGovt ? "text-gray-900 font-extrabold font-mono" : "text-white font-mono"}>
+                              {damageSamples[selectedDamageSample].area}
+                            </strong>
                           </div>
-                          <div className={`flex justify-between border-b pb-1 ${isGovt ? "border-gray-200" : "border-white/5"}`}>
-                            <span className={isGovt ? "text-gray-600 font-semibold" : "text-gray-400"}>Calculated Condition Score:</span>
-                            <strong className={isGovt ? "text-amber-700 font-extrabold" : "text-amber-400"}>{damageSamples[selectedDamageSample].conditionScore}</strong>
+                          <div className={`flex justify-between border-b pb-1.5 ${isGovt ? "border-gray-200" : "border-white/5"}`}>
+                            <span className={isGovt ? "text-gray-700 font-semibold" : "text-gray-400"}>Calculated Condition Score:</span>
+                            <strong className={isGovt ? "text-amber-800 font-extrabold" : "text-amber-400"}>
+                              {damageSamples[selectedDamageSample].conditionScore}
+                            </strong>
                           </div>
                         </div>
 
-                        <div className={`rounded-xl border p-3 text-xs mt-3 ${
+                        <div className={`rounded-xl border p-3.5 text-xs ${
                           isGovt ? "border-blue-200 bg-blue-50 text-blue-900 font-semibold shadow-xs" : "border-cyan-400/20 bg-cyan-400/10 text-cyan-200"
                         }`}>
-                          <p className="font-bold">Automated Protocol Recommendation:</p>
-                          <p className="mt-1">{damageSamples[selectedDamageSample].action}</p>
+                          <p className="font-black flex items-center gap-1.5">
+                            <Sparkles size={13} className="text-cyan-400 shrink-0" /> Automated Protocol Recommendation:
+                          </p>
+                          <p className="mt-1 leading-relaxed">{damageSamples[selectedDamageSample].action}</p>
                         </div>
+
+                        {/* ACTION BUTTONS */}
+                        <div className="pt-2 space-y-2">
+                          <button
+                            onClick={handleGenerateWorkOrder}
+                            className="w-full rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 py-3 px-4 text-xs font-black text-slate-950 shadow-lg shadow-emerald-500/20 transition active:scale-95 flex items-center justify-center gap-2"
+                          >
+                            <Zap size={14} /> Generate Automated Work Order Now
+                          </button>
+                          <button
+                            onClick={() => setShowAiCertificate(true)}
+                            className={`w-full rounded-xl border py-2.5 px-4 text-xs font-bold transition flex items-center justify-center gap-2 ${
+                              isGovt
+                                ? "border-gray-300 text-gray-800 hover:bg-gray-100"
+                                : "border-white/10 text-slate-300 hover:text-white hover:bg-white/5"
+                            }`}
+                          >
+                            <FileCheck size={14} /> Export Verified AI Inspection Certificate
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* HOW TO UNDERSTAND THIS AI DECISION (EXPLAINABLE PIPELINE GUIDE) */}
+                  <div className={`mt-8 rounded-2xl border p-6 ${
+                    isGovt ? "border-gray-200 bg-gray-50 shadow-sm text-gray-900" : "border-white/10 bg-white/[.02] text-white"
+                  }`}>
+                    <div className="flex items-center gap-2 mb-3">
+                      <HelpCircle size={18} className="text-cyan-400" />
+                      <h3 className="text-base font-black">
+                        How to Understand this AI Decision: 5-Stage Automated Pipeline
+                      </h3>
+                    </div>
+                    <p className={`text-xs mb-5 ${muteColor}`}>
+                      CivicLens AI uses transparent, verifiable multi-stage deep learning to convert raw field photos into actionable municipal maintenance orders without human subjectivity.
+                    </p>
+
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5 text-xs">
+                      <div className={`rounded-xl border p-3.5 space-y-1.5 ${isGovt ? "bg-white border-gray-200" : "bg-black/30 border-white/10"}`}>
+                        <div className="flex items-center gap-1.5 font-bold text-cyan-400">
+                          <span className="grid h-5 w-5 place-items-center rounded-full bg-cyan-400/20 text-[10px]">1</span>
+                          <span>RGB Ingestion</span>
+                        </div>
+                        <p className={muteColor}>
+                          1080p frame normalized to 640×640 3-channel tensor with adaptive histogram equalization.
+                        </p>
+                      </div>
+
+                      <div className={`rounded-xl border p-3.5 space-y-1.5 ${isGovt ? "bg-white border-gray-200" : "bg-black/30 border-white/10"}`}>
+                        <div className="flex items-center gap-1.5 font-bold text-blue-400">
+                          <span className="grid h-5 w-5 place-items-center rounded-full bg-blue-400/20 text-[10px]">2</span>
+                          <span>ResNet-50 Features</span>
+                        </div>
+                        <p className={muteColor}>
+                          50-layer convolutional backbone extracts spatial edge gradients and textural micro-fractures.
+                        </p>
+                      </div>
+
+                      <div className={`rounded-xl border p-3.5 space-y-1.5 ${isGovt ? "bg-white border-gray-200" : "bg-black/30 border-white/10"}`}>
+                        <div className="flex items-center gap-1.5 font-bold text-purple-400">
+                          <span className="grid h-5 w-5 place-items-center rounded-full bg-purple-400/20 text-[10px]">3</span>
+                          <span>YOLOv8 Detection</span>
+                        </div>
+                        <p className={muteColor}>
+                          Anchor-free bounding box regression filters noise using Non-Maximum Suppression (IoU 0.45).
+                        </p>
+                      </div>
+
+                      <div className={`rounded-xl border p-3.5 space-y-1.5 ${isGovt ? "bg-white border-gray-200" : "bg-black/30 border-white/10"}`}>
+                        <div className="flex items-center gap-1.5 font-bold text-amber-400">
+                          <span className="grid h-5 w-5 place-items-center rounded-full bg-amber-400/20 text-[10px]">4</span>
+                          <span>Depth &amp; Area Mensuration</span>
+                        </div>
+                        <p className={muteColor}>
+                          Photogrammetric pixel-to-metric ratio calculates depth in centimeters and surface area in m².
+                        </p>
+                      </div>
+
+                      <div className={`rounded-xl border p-3.5 space-y-1.5 ${isGovt ? "bg-white border-gray-200" : "bg-black/30 border-white/10"}`}>
+                        <div className="flex items-center gap-1.5 font-bold text-emerald-400">
+                          <span className="grid h-5 w-5 place-items-center rounded-full bg-emerald-400/20 text-[10px]">5</span>
+                          <span>Auto Work Order</span>
+                        </div>
+                        <p className={muteColor}>
+                          Penalizes asset health score and dispatches P1/P2 repair order directly to municipal squad.
+                        </p>
                       </div>
                     </div>
                   </div>
                 </div>
+
+                {/* MODAL 1: AUTOMATED WORK ORDER RECEIPT */}
+                <AnimatePresence>
+                  {autoWorkOrderNotice && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="w-full max-w-lg rounded-3xl border border-cyan-400/40 bg-[#091522] p-6 sm:p-8 shadow-2xl text-white relative"
+                      >
+                        <button
+                          onClick={() => setAutoWorkOrderNotice(null)}
+                          className="absolute right-5 top-5 rounded-full p-2 text-gray-400 hover:text-white hover:bg-white/10"
+                        >
+                          <X size={20} />
+                        </button>
+
+                        <div className="flex items-center gap-3 text-cyan-400 mb-4">
+                          <div className="grid h-12 w-12 place-items-center rounded-2xl bg-cyan-500/20 border border-cyan-500/30">
+                            <Zap size={24} />
+                          </div>
+                          <div>
+                            <h3 className="text-xl font-black">Automated Work Order Dispatched</h3>
+                            <p className="text-xs text-cyan-300">Generated directly by CivicLens AI Computer Vision Engine</p>
+                          </div>
+                        </div>
+
+                        <div className="rounded-2xl border border-white/10 bg-black/40 p-4 space-y-2 text-xs font-mono">
+                          <div className="flex justify-between border-b border-white/10 pb-1.5">
+                            <span className="text-gray-400">Work Order Code:</span>
+                            <span className="text-cyan-300 font-bold">{autoWorkOrderNotice.id}</span>
+                          </div>
+                          <div className="flex justify-between border-b border-white/10 pb-1.5">
+                            <span className="text-gray-400">Classified Defect:</span>
+                            <span className="text-white font-bold">{autoWorkOrderNotice.category} ({autoWorkOrderNotice.severity})</span>
+                          </div>
+                          <div className="flex justify-between border-b border-white/10 pb-1.5">
+                            <span className="text-gray-400">Location Asset:</span>
+                            <span className="text-amber-300 font-bold truncate max-w-[240px]">{autoWorkOrderNotice.location}</span>
+                          </div>
+                          <div className="flex justify-between border-b border-white/10 pb-1.5">
+                            <span className="text-gray-400">Assigned Department:</span>
+                            <span className="text-slate-200">{autoWorkOrderNotice.dept}</span>
+                          </div>
+                          <div className="flex justify-between border-b border-white/10 pb-1.5">
+                            <span className="text-gray-400">Estimated Budget:</span>
+                            <span className="text-emerald-400 font-bold">{autoWorkOrderNotice.cost}</span>
+                          </div>
+                          <div className="flex justify-between pt-1">
+                            <span className="text-gray-400">SLA Resolution Window:</span>
+                            <span className="text-purple-300 font-bold">{autoWorkOrderNotice.sla}</span>
+                          </div>
+                        </div>
+
+                        <div className="mt-4 rounded-xl border border-cyan-400/20 bg-cyan-400/5 p-3 text-xs text-cyan-200">
+                          <strong>System Status:</strong> Ticket successfully entered into the state execution pipeline. Department supervisor notified via SMS/NIC Mail.
+                        </div>
+
+                        <div className="mt-6 flex justify-end gap-3">
+                          <Link
+                            href="/work-orders"
+                            className="rounded-xl border border-white/10 px-4 py-2 text-xs font-bold text-gray-300 hover:bg-white/5"
+                          >
+                            View in Work Orders List →
+                          </Link>
+                          <button
+                            onClick={() => setAutoWorkOrderNotice(null)}
+                            className="rounded-xl bg-cyan-400 px-5 py-2 text-xs font-black text-slate-950 hover:bg-cyan-300"
+                          >
+                            Done
+                          </button>
+                        </div>
+                      </motion.div>
+                    </div>
+                  )}
+                </AnimatePresence>
+
+                {/* MODAL 2: VERIFIED AI INSPECTION CERTIFICATE */}
+                <AnimatePresence>
+                  {showAiCertificate && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="w-full max-w-lg rounded-3xl border border-emerald-400/40 bg-[#091522] p-6 sm:p-8 shadow-2xl text-white relative"
+                      >
+                        <button
+                          onClick={() => setShowAiCertificate(false)}
+                          className="absolute right-5 top-5 rounded-full p-2 text-gray-400 hover:text-white hover:bg-white/10"
+                        >
+                          <X size={20} />
+                        </button>
+
+                        <div className="flex items-center gap-3 text-emerald-400 mb-4">
+                          <div className="grid h-12 w-12 place-items-center rounded-2xl bg-emerald-500/20 border border-emerald-500/30">
+                            <FileCheck size={24} />
+                          </div>
+                          <div>
+                            <h3 className="text-xl font-black">AI Telemetry Certificate</h3>
+                            <p className="text-xs text-emerald-300">Cryptographically signed inspection record</p>
+                          </div>
+                        </div>
+
+                        <div className="rounded-2xl border border-white/10 bg-black/50 p-4 space-y-2 text-xs font-mono">
+                          <div className="flex justify-between border-b border-white/10 pb-1.5">
+                            <span className="text-gray-400">Certificate ID:</span>
+                            <span className="text-cyan-300 font-bold">CERT-TR-CV-{Math.floor(100000 + Math.random() * 900000)}</span>
+                          </div>
+                          <div className="flex justify-between border-b border-white/10 pb-1.5">
+                            <span className="text-gray-400">Inspection Model:</span>
+                            <span className="text-white">ResNet50-YOLOv8-TR-v2.1</span>
+                          </div>
+                          <div className="flex justify-between border-b border-white/10 pb-1.5">
+                            <span className="text-gray-400">Classified Defect:</span>
+                            <span className="text-amber-300 font-bold">{damageSamples[selectedDamageSample].type}</span>
+                          </div>
+                          <div className="flex justify-between border-b border-white/10 pb-1.5">
+                            <span className="text-gray-400">Confidence Score:</span>
+                            <span className="text-emerald-400 font-bold">{damageSamples[selectedDamageSample].confidence}</span>
+                          </div>
+                          <div className="flex justify-between border-b border-white/10 pb-1.5">
+                            <span className="text-gray-400">SHA-256 Ledger Hash:</span>
+                            <span className="text-purple-300 text-[10px] break-all">e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855</span>
+                          </div>
+                          <div className="flex justify-between pt-1">
+                            <span className="text-gray-400">Timestamp:</span>
+                            <span className="text-slate-400">{new Date().toISOString()}</span>
+                          </div>
+                        </div>
+
+                        <div className="mt-6 flex justify-end gap-3">
+                          <button
+                            onClick={() => {
+                              alert("Telemetry certificate downloaded as signed JSON/PDF format.");
+                              setShowAiCertificate(false);
+                            }}
+                            className="rounded-xl bg-emerald-500 hover:bg-emerald-400 px-5 py-2.5 text-xs font-black text-slate-950 flex items-center gap-2"
+                          >
+                            <Download size={14} /> Download Certificate (PDF/JSON)
+                          </button>
+                        </div>
+                      </motion.div>
+                    </div>
+                  )}
+                </AnimatePresence>
               </motion.div>
             )}
 

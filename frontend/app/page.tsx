@@ -407,9 +407,9 @@ function GovtHome() {
                   <Link
                     href="/login"
                     className="inline-flex items-center gap-2 rounded-md bg-[#0a5c9e] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#084d87]"
-                    aria-label="Officer login to CivicLens operations portal"
+                    aria-label="Sign in or track grievance status"
                   >
-                    Officer Login <ArrowRight size={15} aria-hidden="true" />
+                    Sign In / Track Grievance <ArrowRight size={15} aria-hidden="true" />
                   </Link>
                   <Link
                     href="/report"

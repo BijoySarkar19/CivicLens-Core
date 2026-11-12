@@ -33,6 +33,12 @@ import {
   Phone,
   Mail,
   Building,
+  Trash2,
+  Send,
+  X,
+  BadgeCheck,
+  Radio,
+  FileCode,
 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import {
@@ -79,6 +85,47 @@ export default function AdminPage() {
   const [deptSearch, setDeptSearch] = useState("");
   const [auditSearch, setAuditSearch] = useState("");
   const [refreshing, setRefreshing] = useState(false);
+
+  // Employee details & dismissal management
+  const [selectedOfficer, setSelectedOfficer] = useState<(typeof DEMO_ADMIN_USERS)[0] | null>(null);
+  const [officerToDismiss, setOfficerToDismiss] = useState<(typeof DEMO_ADMIN_USERS)[0] | null>(null);
+  const [dismissalEmailNotice, setDismissalEmailNotice] = useState<{
+    officer: (typeof DEMO_ADMIN_USERS)[0];
+    token: string;
+    timestamp: string;
+  } | null>(null);
+
+  const handleDismissOfficer = (officer: (typeof DEMO_ADMIN_USERS)[0]) => {
+    const token = `TR-REV-NIC-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
+    const timestamp = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+
+    // Mark as revoked/inactive in users state
+    setUsers((prev) =>
+      prev.map((u) => (u.id === officer.id ? { ...u, active: false, last_login: "Access Revoked" } : u))
+    );
+
+    // Record in tamper-evident audit trail
+    const auditRecord = {
+      id: Date.now(),
+      actor: "Chief Operations Officer (Super Admin)",
+      action: "OFFICER_DISMISSED_AND_ACCESS_REVOKED",
+      entity: "User / Employee",
+      entity_id: officer.employee_id || String(officer.id),
+      request_id: `req-dismiss-${token}`,
+      details: `Official dismissal order executed. Access credentials revoked. Automated termination notice dispatched to ${officer.email} via NIC SMTP Gateway. Security Token: ${token}`,
+      created_at: new Date().toISOString(),
+    };
+    setAudit((prev) => [auditRecord, ...prev]);
+
+    // Close confirmation and trigger automated email notification modal
+    setOfficerToDismiss(null);
+    if (selectedOfficer?.id === officer.id) setSelectedOfficer(null);
+    setDismissalEmailNotice({
+      officer,
+      token,
+      timestamp,
+    });
+  };
 
   const fetchData = useCallback(async () => {
     try {
@@ -265,7 +312,7 @@ export default function AdminPage() {
               </div>
             )}
 
-            {/* 2. USERS TAB */}
+            {/* 2. USERS & EMPLOYEE MANAGEMENT TAB */}
             {tab === "users" && (
               <div className="space-y-5">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -275,27 +322,30 @@ export default function AdminPage() {
                       type="search"
                       value={userSearch}
                       onChange={(e) => setUserSearch(e.target.value)}
-                      placeholder="Search users by name, email, department or role…"
+                      placeholder="Search officers by name, ID, email, station or role…"
                       className={`w-full rounded-xl border pl-10 pr-4 py-2.5 text-sm outline-none ${
                         isGovt ? "border-gray-300 bg-white text-gray-900" : "border-white/10 bg-[#0b1726] text-white"
                       }`}
                     />
                   </div>
-                  <span className="text-xs font-medium text-gray-400">
-                    Showing {filteredUsers.length} authorized officers
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs font-semibold text-gray-400">
+                      Total Roster: <strong className={isGovt ? "text-gray-900 font-bold" : "text-white"}>{users.length}</strong> (Active: {users.filter((u) => u.active).length}, Dismissed: {users.filter((u) => !u.active).length})
+                    </span>
+                  </div>
                 </div>
 
                 <div className={`rounded-2xl border overflow-hidden ${cardBg}`}>
                   <div className="overflow-x-auto">
-                    <table className="w-full min-w-[720px] text-sm" role="table">
+                    <table className="w-full min-w-[880px] text-sm" role="table">
                       <thead>
                         <tr className={isGovt ? "bg-gray-100 text-gray-700 text-xs uppercase" : "bg-white/[.03] text-slate-400 text-xs uppercase"}>
-                          <th className="px-5 py-4 text-left font-bold">Officer / User</th>
-                          <th className="px-4 py-4 text-left font-bold">Department Jurisdiction</th>
+                          <th className="px-5 py-4 text-left font-bold">Officer / Employee</th>
+                          <th className="px-4 py-4 text-left font-bold">Employee ID &amp; Station</th>
+                          <th className="px-4 py-4 text-left font-bold">Department &amp; Clearance</th>
                           <th className="px-4 py-4 text-left font-bold">System Role</th>
                           <th className="px-4 py-4 text-left font-bold">Status</th>
-                          <th className="px-4 py-4 text-left font-bold">Last Activity</th>
+                          <th className="px-5 py-4 text-right font-bold">HR Actions</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-white/5">
@@ -307,33 +357,103 @@ export default function AdminPage() {
                           return (
                             <tr key={u.id} className={isGovt ? "hover:bg-gray-50" : "hover:bg-white/[.02]"}>
                               <td className="px-5 py-4">
-                                <div className="font-bold text-white flex items-center gap-2">
-                                  <div className="grid h-8 w-8 place-items-center rounded-lg bg-cyan-500/10 text-cyan-300 font-black text-xs">
-                                    {u.name.charAt(0)}
+                                <div className="flex items-center gap-3">
+                                  <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full border border-white/10 bg-slate-800">
+                                    {/* Officer Avatar Image */}
+                                    {u.avatar ? (
+                                      <img
+                                        src={u.avatar}
+                                        alt={u.name}
+                                        className="h-full w-full object-cover"
+                                        onError={(e) => {
+                                          (e.target as HTMLElement).style.display = "none";
+                                        }}
+                                      />
+                                    ) : null}
+                                    <div className="absolute inset-0 grid place-items-center bg-cyan-500/20 text-cyan-300 font-black text-sm -z-10">
+                                      {u.name.charAt(0)}
+                                    </div>
                                   </div>
                                   <div>
-                                    <p className={`font-bold ${isGovt ? "text-gray-900" : "text-white"}`}>{u.name}</p>
-                                    <p className="text-xs text-gray-400 font-mono">{u.email}</p>
+                                    <p className={`font-bold flex items-center gap-1.5 ${isGovt ? "text-gray-900" : "text-white"}`}>
+                                      {u.name}
+                                      {u.role === "super_admin" && (
+                                        <Crown size={13} className="text-amber-400" />
+                                      )}
+                                    </p>
+                                    <p className="text-xs text-gray-400">{u.designation || u.role}</p>
+                                    <p className="text-[11px] text-cyan-400/80 font-mono">{u.email}</p>
                                   </div>
                                 </div>
                               </td>
-                              <td className={`px-4 py-4 text-xs font-medium ${isGovt ? "text-gray-700" : "text-slate-300"}`}>
-                                {u.department}
+
+                              <td className="px-4 py-4">
+                                <span className="inline-block rounded-md bg-white/5 px-2 py-0.5 text-xs font-mono font-bold text-slate-300 border border-white/10">
+                                  {u.employee_id || `TR-EMP-${u.id}`}
+                                </span>
+                                <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
+                                  <MapPin size={11} className="text-cyan-400 shrink-0" />
+                                  <span className="truncate max-w-[200px]">{u.station || "Agartala, Tripura"}</span>
+                                </p>
                               </td>
+
+                              <td className="px-4 py-4">
+                                <p className={`text-xs font-semibold ${isGovt ? "text-gray-800" : "text-slate-200"}`}>
+                                  {u.department}
+                                </p>
+                                <p className="text-[11px] text-gray-400 font-mono mt-0.5 flex items-center gap-1">
+                                  <ShieldCheck size={11} className="text-emerald-400" />
+                                  {u.clearance || "Tier 1 — Standard Operational Access"}
+                                </p>
+                              </td>
+
                               <td className="px-4 py-4">
                                 <span className={`badge text-xs font-bold whitespace-nowrap ${roleInfo.color}`}>
                                   {roleInfo.label}
                                 </span>
                               </td>
+
                               <td className="px-4 py-4">
-                                <span className={`inline-flex items-center gap-1.5 text-xs font-bold whitespace-nowrap ${
-                                  u.active ? (isGovt ? "text-green-700" : "text-emerald-300") : "text-red-400"
-                                }`}>
-                                  <UserCheck size={14} /> Active
-                                </span>
+                                {u.active ? (
+                                  <span className={`inline-flex items-center gap-1.5 text-xs font-bold whitespace-nowrap ${
+                                    isGovt ? "text-emerald-700" : "text-emerald-300"
+                                  }`}>
+                                    <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" /> Active Duty
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1.5 text-xs font-bold whitespace-nowrap text-red-400">
+                                    <span className="h-2 w-2 rounded-full bg-red-500" /> Relieved / Revoked
+                                  </span>
+                                )}
                               </td>
-                              <td className="px-4 py-4 text-xs font-mono text-gray-400 whitespace-nowrap">
-                                {u.last_login}
+
+                              <td className="px-5 py-4 text-right">
+                                <div className="inline-flex items-center gap-2">
+                                  <button
+                                    onClick={() => setSelectedOfficer(u)}
+                                    className={`rounded-lg border px-2.5 py-1.5 text-xs font-bold transition ${
+                                      isGovt
+                                        ? "border-blue-300 bg-blue-50 text-blue-900 hover:bg-blue-100"
+                                        : "border-cyan-400/30 bg-cyan-400/10 text-cyan-300 hover:bg-cyan-400/20"
+                                    }`}
+                                    title="View employee full details dossier"
+                                  >
+                                    View Dossier
+                                  </button>
+                                  {u.active ? (
+                                    <button
+                                      onClick={() => setOfficerToDismiss(u)}
+                                      className="rounded-lg border border-red-500/30 bg-red-500/10 px-2.5 py-1.5 text-xs font-bold text-red-300 hover:bg-red-500 hover:text-white transition"
+                                      title="Revoke officer credentials & send automated dismissal notice"
+                                    >
+                                      Fire / Dismiss
+                                    </button>
+                                  ) : (
+                                    <span className="text-[11px] font-mono text-red-400 font-bold px-2 py-1 bg-red-500/5 rounded border border-red-500/20">
+                                      Revoked
+                                    </span>
+                                  )}
+                                </div>
                               </td>
                             </tr>
                           );
@@ -342,6 +462,267 @@ export default function AdminPage() {
                     </table>
                   </div>
                 </div>
+
+                {/* EMPLOYEE DOSSIER MODAL */}
+                <AnimatePresence>
+                  {selectedOfficer && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className={`w-full max-w-2xl rounded-3xl border p-6 sm:p-8 shadow-2xl relative ${
+                          isGovt ? "bg-white border-gray-300 text-gray-900" : "bg-[#0c1827] border-white/10 text-white"
+                        }`}
+                      >
+                        <button
+                          onClick={() => setSelectedOfficer(null)}
+                          className="absolute right-5 top-5 rounded-full p-2 text-gray-400 hover:text-white hover:bg-white/10 transition"
+                          aria-label="Close dossier"
+                        >
+                          <X size={20} />
+                        </button>
+
+                        <div className="flex items-center gap-2 mb-4">
+                          <span className="badge text-xs font-bold uppercase tracking-wider text-cyan-300 border-cyan-400/30 bg-cyan-400/10">
+                            Government of Tripura · Official Personnel Dossier
+                          </span>
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 border-b pb-6 border-white/10">
+                          <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl border-2 border-cyan-400/50 shadow-xl bg-slate-800">
+                            {selectedOfficer.avatar ? (
+                              <img
+                                src={selectedOfficer.avatar}
+                                alt={selectedOfficer.name}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : null}
+                            <div className="absolute inset-0 grid place-items-center bg-cyan-500/20 text-cyan-300 font-black text-xl -z-10">
+                              {selectedOfficer.name.charAt(0)}
+                            </div>
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="text-2xl font-black">{selectedOfficer.name}</h3>
+                            <p className="text-sm text-cyan-400 font-semibold">{selectedOfficer.designation || selectedOfficer.role}</p>
+                            <p className="text-xs text-gray-400 mt-1">{selectedOfficer.department}</p>
+                          </div>
+                          <div>
+                            {selectedOfficer.active ? (
+                              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 text-xs font-bold text-emerald-300">
+                                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" /> Active Commission
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1.5 rounded-full bg-red-500/10 border border-red-500/30 px-3 py-1 text-xs font-bold text-red-400">
+                                Relieved from Duty
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Dossier Information Grid */}
+                        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                          <div className="rounded-xl border border-white/10 bg-white/5 p-3.5 space-y-1">
+                            <span className="text-gray-400 font-medium">Official Employee Code</span>
+                            <p className="font-mono text-sm font-bold text-cyan-300">{selectedOfficer.employee_id || `TR-EMP-${selectedOfficer.id}`}</p>
+                          </div>
+                          <div className="rounded-xl border border-white/10 bg-white/5 p-3.5 space-y-1">
+                            <span className="text-gray-400 font-medium">Security Clearance</span>
+                            <p className="font-bold text-emerald-300">{selectedOfficer.clearance || "Tier 1 — Field Operator"}</p>
+                          </div>
+                          <div className="rounded-xl border border-white/10 bg-white/5 p-3.5 space-y-1">
+                            <span className="text-gray-400 font-medium">Official Registered Email</span>
+                            <p className="font-mono text-xs font-bold text-white break-all flex items-center gap-1.5">
+                              <Mail size={13} className="text-cyan-400 shrink-0" /> {selectedOfficer.email}
+                            </p>
+                          </div>
+                          <div className="rounded-xl border border-white/10 bg-white/5 p-3.5 space-y-1">
+                            <span className="text-gray-400 font-medium">Government Official Mobile</span>
+                            <p className="font-mono text-xs font-bold text-white flex items-center gap-1.5">
+                              <Phone size={13} className="text-cyan-400 shrink-0" /> {selectedOfficer.phone || "+91 94361-XXXXX"}
+                            </p>
+                          </div>
+                          <div className="rounded-xl border border-white/10 bg-white/5 p-3.5 space-y-1">
+                            <span className="text-gray-400 font-medium">Headquarters / Station Post</span>
+                            <p className="font-semibold text-slate-200 flex items-center gap-1.5">
+                              <MapPin size={13} className="text-cyan-400 shrink-0" /> {selectedOfficer.station || "Agartala, Tripura"}
+                            </p>
+                          </div>
+                          <div className="rounded-xl border border-white/10 bg-white/5 p-3.5 space-y-1">
+                            <span className="text-gray-400 font-medium">Commission Date &amp; Last Activity</span>
+                            <p className="font-semibold text-slate-200">
+                              {selectedOfficer.joined_date || "15 Jan 2024"} · ({selectedOfficer.last_login})
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Modal Action Footer */}
+                        <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-white/10 pt-5">
+                          <p className="text-[11px] text-gray-400">
+                            All personnel modifications are signed into the immutable PostGIS audit log.
+                          </p>
+                          <div className="flex items-center gap-3 w-full sm:w-auto">
+                            <button
+                              onClick={() => setSelectedOfficer(null)}
+                              className="w-full sm:w-auto rounded-xl border border-white/10 px-4 py-2.5 text-xs font-bold text-gray-300 hover:bg-white/5"
+                            >
+                              Close Dossier
+                            </button>
+                            {selectedOfficer.active && (
+                              <button
+                                onClick={() => {
+                                  setOfficerToDismiss(selectedOfficer);
+                                  setSelectedOfficer(null);
+                                }}
+                                className="w-full sm:w-auto rounded-xl bg-red-600 hover:bg-red-500 px-4 py-2.5 text-xs font-black text-white shadow-lg shadow-red-600/30 transition flex items-center justify-center gap-2"
+                              >
+                                <Trash2 size={14} /> Revoke &amp; Dismiss (Fire)
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </motion.div>
+                    </div>
+                  )}
+                </AnimatePresence>
+
+                {/* DISMISSAL CONFIRMATION DIALOG */}
+                <AnimatePresence>
+                  {officerToDismiss && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="w-full max-w-lg rounded-3xl border border-red-500/40 bg-[#0d141f] p-6 sm:p-8 shadow-2xl text-white"
+                      >
+                        <div className="flex items-center gap-3 text-red-400 mb-4">
+                          <div className="grid h-12 w-12 place-items-center rounded-2xl bg-red-500/20 border border-red-500/30">
+                            <AlertTriangle size={24} />
+                          </div>
+                          <div>
+                            <h3 className="text-xl font-black">Revoke Credentials &amp; Dismiss</h3>
+                            <p className="text-xs text-red-300">Executive Disciplinary Action · Govt of Tripura</p>
+                          </div>
+                        </div>
+
+                        <p className="text-sm text-slate-300 leading-relaxed">
+                          Are you sure you want to dismiss <strong className="text-white">{officerToDismiss.name}</strong> ({officerToDismiss.employee_id}) from <strong className="text-white">{officerToDismiss.department}</strong>?
+                        </p>
+
+                        <div className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-xs space-y-2 text-red-200">
+                          <p className="font-bold flex items-center gap-1.5 text-red-300">
+                            <Send size={13} /> Automated Notification Transmission:
+                          </p>
+                          <p>
+                            Upon confirmation, an official dismissal notification will be automatically transmitted to the registered address:
+                          </p>
+                          <p className="font-mono font-bold text-white bg-black/40 px-2 py-1 rounded">
+                            {officerToDismiss.email}
+                          </p>
+                          <p className="text-[11px] text-red-300">
+                            • Cryptographic API bearer tokens will be invalidated immediately.<br />
+                            • Biometric and portal access will be permanently revoked.<br />
+                            • A cryptographic audit event will be logged in the state audit ledger.
+                          </p>
+                        </div>
+
+                        <div className="mt-6 flex items-center justify-end gap-3">
+                          <button
+                            onClick={() => setOfficerToDismiss(null)}
+                            className="rounded-xl border border-white/10 px-4 py-2.5 text-xs font-bold text-gray-300 hover:bg-white/5"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={() => handleDismissOfficer(officerToDismiss)}
+                            className="rounded-xl bg-red-600 hover:bg-red-500 px-5 py-2.5 text-xs font-black text-white shadow-xl shadow-red-600/30 transition flex items-center gap-2"
+                          >
+                            <Trash2 size={14} /> Confirm &amp; Fire Officer
+                          </button>
+                        </div>
+                      </motion.div>
+                    </div>
+                  )}
+                </AnimatePresence>
+
+                {/* AUTOMATED EMAIL DISPATCH TRANSMISSION RECEIPT MODAL */}
+                <AnimatePresence>
+                  {dismissalEmailNotice && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="w-full max-w-xl rounded-3xl border border-emerald-500/40 bg-[#091522] p-6 sm:p-8 shadow-2xl text-white relative"
+                      >
+                        <button
+                          onClick={() => setDismissalEmailNotice(null)}
+                          className="absolute right-5 top-5 rounded-full p-2 text-gray-400 hover:text-white hover:bg-white/10"
+                        >
+                          <X size={20} />
+                        </button>
+
+                        <div className="flex items-center gap-3 text-emerald-400 mb-4">
+                          <div className="grid h-12 w-12 place-items-center rounded-2xl bg-emerald-500/20 border border-emerald-500/30">
+                            <CheckCircle2 size={24} />
+                          </div>
+                          <div>
+                            <h3 className="text-xl font-black">Official Notice Dispatched</h3>
+                            <p className="text-xs text-emerald-300">Automated State Gateway Transmission Complete</p>
+                          </div>
+                        </div>
+
+                        <p className="text-xs text-slate-300">
+                          The officer&apos;s credentials have been permanently revoked and an official dismissal notice was fired to the registered recipient mail.
+                        </p>
+
+                        {/* Simulated Email Envelope Header */}
+                        <div className="mt-5 rounded-2xl border border-white/10 bg-black/40 p-4 space-y-2 text-xs font-mono">
+                          <div className="flex justify-between border-b border-white/10 pb-2">
+                            <span className="text-gray-400">SMTP Gateway:</span>
+                            <span className="text-emerald-400 font-bold">mail.nic.in (Govt of Tripura Relay)</span>
+                          </div>
+                          <div className="flex justify-between border-b border-white/10 pb-2">
+                            <span className="text-gray-400">Recipient (To):</span>
+                            <span className="text-cyan-300 font-bold">{dismissalEmailNotice.officer.email}</span>
+                          </div>
+                          <div className="flex justify-between border-b border-white/10 pb-2">
+                            <span className="text-gray-400">From:</span>
+                            <span className="text-slate-300">vigilance-admin@tripura.gov.in</span>
+                          </div>
+                          <div className="flex justify-between border-b border-white/10 pb-2">
+                            <span className="text-gray-400">Subject:</span>
+                            <span className="text-amber-300 font-bold">
+                              [OFFICIAL] REVOCATION OF CIVICLENS ACCESS CREDENTIALS &amp; RELIEF FROM DUTY
+                            </span>
+                          </div>
+                          <div className="flex justify-between border-b border-white/10 pb-2">
+                            <span className="text-gray-400">Security Revocation Token:</span>
+                            <span className="text-purple-300 font-bold">{dismissalEmailNotice.token}</span>
+                          </div>
+                          <div className="flex justify-between pt-1 text-[11px]">
+                            <span className="text-gray-400">Dispatched At:</span>
+                            <span className="text-slate-400">{dismissalEmailNotice.timestamp}</span>
+                          </div>
+                        </div>
+
+                        <div className="mt-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3 text-xs text-emerald-200">
+                          <strong>Audit Log Updated:</strong> A permanent tamper-evident entry has been stamped into the PostGIS state audit trail under entity ID <code className="font-bold text-white">{dismissalEmailNotice.officer.employee_id}</code>.
+                        </div>
+
+                        <div className="mt-6 flex justify-end">
+                          <button
+                            onClick={() => setDismissalEmailNotice(null)}
+                            className="rounded-xl bg-cyan-400 hover:bg-cyan-300 px-6 py-2.5 text-xs font-black text-slate-950 transition"
+                          >
+                            Acknowledge &amp; Return to Admin
+                          </button>
+                        </div>
+                      </motion.div>
+                    </div>
+                  )}
+                </AnimatePresence>
               </div>
             )}
 

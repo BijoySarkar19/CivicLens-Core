@@ -35,7 +35,7 @@
   <a href="#-complete-unified-architecture">Unified Architecture</a> •
   <a href="#-project-directory-structure">Folder Structure</a> •
   <a href="#-ai-predictive-decision-layer">AI Decision Engine</a> •
-  <a href="#-tripura-infrastructure-70-assets">Tripura Assets &amp; Panchayats</a> •
+  <a href="#-tripura-infrastructure-95-comprehensive-assets">Tripura Assets &amp; Panchayats</a> •
   <a href="#-human-resources--employee-dossier">HR &amp; Personnel Dossier</a> •
   <a href="#-docker--quickstart">Docker &amp; Endpoints</a> •
   <a href="#-security--standards-compliance">Security &amp; Standards</a>
@@ -59,7 +59,7 @@ flowchart LR
 ```
 
 ### Core Innovations:
-1. **70+ Tripura Infrastructure Assets**: Spans all 8 districts (*West Tripura, Sepahijala, Khowai, Gomati, South Tripura, Dhalai, Unakoti, North Tripura*), including tourist destinations, named expressways, municipal wards (including **Ward No. 50**), **8 rural Gram Panchayats**, drainage sluices, lakes, power plants, police stations, and fire brigade stations.
+1. **95+ Tripura Infrastructure Assets**: Spans all 8 districts (*West Tripura, Sepahijala, Khowai, Gomati, South Tripura, Dhalai, Unakoti, North Tripura*), including **Railway Stations & Junctions** (AGTL, Sabroom, Udaipur, Dharmanagar), **Inter-state Rail Corridors**, **Mountain Tunnels** (Longtharai, Atharamura, Baramura), **Major Bridges** (Maitri Setu, Howrah 4-Lane, Manu, Gumti), **Principal Rivers** (Gumti, Howrah, Manu, Khowai, Feni), tourist destinations, expressways, municipal wards (including **Ward No. 50**), **8 rural Gram Panchayats**, drainage sluices, lakes, power plants, police stations, and fire brigade stations.
 2. **Interactive Computer Vision Defect Classifier**:
    - Field camera snap / custom image upload with dynamic laser scan animation.
    - 4 high-definition realistic vector defect presets (Pothole, Structural Crack, Drainage Scour, Electrical Hazard).
@@ -93,7 +93,7 @@ flowchart LR
          ┌──────────────────────────────────┼──────────────────────────────────┐
          │                                  │                                  │
    Asset Service                     Incident Service                  Work Order Service
- (70+ Tripura Assets)              (GPS & 50MB Evidence)             (SLA & Dispatching)
+ (95+ Tripura Assets)              (GPS & 50MB Evidence)             (SLA & Dispatching)
          │                                  │                                  │
          ├──────────────────────────────────┼──────────────────────────────────┤
          │                                  │                                  │
@@ -152,13 +152,18 @@ $$\text{Risk Score} = w_1 \cdot \text{Age} + w_2 \cdot \text{Monsoon Saturation}
 
 ---
 
-## 🏛️ Tripura Infrastructure (70+ Assets)
+## 🏛️ Tripura Infrastructure (95+ Comprehensive Assets)
 
 CivicLens includes built-in geospatial data covering all 8 districts of Tripura:
 
 | Category | Representative Assets | Count | Key Features |
 | :--- | :--- | :---: | :--- |
 | **Tourist & Heritage** | Ujjayanta Palace, Neermahal, Unakoti, Matabari, Pilak, Jampui Hills | 10 | Heritage stormwater drainage, visitor access pathways, lighting |
+| **Railway Stations** | **Agartala Jn (AGTL), Dharmanagar (DMR), Udaipur (UDPU), Sabroom (SBRM), Kumarghat, Ambassa, Belonia, Teliamura** | 8 | Broad-gauge platforms, Rajdhani/Tejas rakes, signaling depots |
+| **Rail Routes & Corridors** | **Agartala-Sabroom Trunk (110 km), Lumding-Badarpur Lifeline, Agartala-Akhaura International Link** | 3 | Electrified broad/dual gauge, inter-state & international trade lines |
+| **Railway Tunnels** | **Longtharai Tunnel (1,962 m - Longest in State), Atharamura Tunnel, Baramura Tunnel** | 3 | Deep rock mountain bores, seismic telemetry, ventilation pumps |
+| **Major Bridges** | **Maitri Setu (1.9 km Feni River), Howrah River Battala 4-Lane, Manu River NH-8, Gumti River, Khowai River** | 5 | Pre-stressed concrete spans, international links, pier scour aprons |
+| **Principal Rivers** | **Gumti (Gomati), Howrah (Saidra), Manu (167 km), Khowai, Feni, Dhalai, Juri, Muhuri** | 8 | Hydrological basin telemetry, flood sluice networks, river embankments |
 | **Named Expressways** | MBB Airport Expressway, VIP Road, Melaghar Highway, Baramura Pass | 10 | Bitumen pavement telemetry, culverts, bridge approaches |
 | **Municipal Wards** | AMC Ward 1, 2, 7, 12, 18, 25, 31, **Ward 50 (Khayerpur Extension)** | 11 | Urban jurisdiction boundaries, ward sanitation, DWS pipelines |
 | **Gram Panchayats** | **Lembucherra, Matabari, Madhupur, Bagbassa, Rajnagar, Halahali, Padmabil, Fatikroy** | 8 | Rural civic centers, village piped water, cyclone shelters |
@@ -298,7 +303,7 @@ CivicLens-Core/
 | **Admin Command & Control** | `/admin` | `admin@civiclens.local` / `AdminPass123!` | Personnel dossier, dismissal simulation, audit logs, system telemetry |
 | **Predictive AI Suite** | `/ai` | Public Access | CV damage detector, photo upload, 90-day risk curve, What-If slider |
 | **Tripura GIS Map** | `/map` | Public Access | Interactive Leaflet heatmap, deep zoom, asset marker focus |
-| **Asset Registry** | `/assets` | Public Access | 70+ assets with category filters: Wards (Ward 50), Panchayats, Tourist |
+| **Asset Registry** | `/assets` | Public Access | 95+ assets with category filters: Wards (Ward 50), Panchayats, Railways, Tunnels, Bridges, Rivers, Tourist |
 | **Citizen Grievance Submission** | `/report` | Public Access | Photo evidence, GPS capture, word counter (5 to 10,000 words) |
 | **Grievance Status Tracker** | `/login` | Mobile: `98621 44520` (OTP: `123456`) | Real-time complaint progression timeline and resolution SLA |
 

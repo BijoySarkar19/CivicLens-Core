@@ -42,7 +42,9 @@ export default function AssetsPage() {
   const [query, setQuery] = useState("");
   const [districtFilter, setDistrictFilter] = useState("All Districts");
   const [conditionFilter, setConditionFilter] = useState("all");
-  const [categoryFilter, setCategoryFilter] = useState<"all" | "ward" | "panchayat" | "tourist" | "road" | "power" | "emergency">("all");
+  const [categoryFilter, setCategoryFilter] = useState<
+    "all" | "ward" | "panchayat" | "tourist" | "road" | "power" | "emergency" | "railway" | "river_bridge"
+  >("all");
   const [touristOnly, setTouristOnly] = useState(false);
   const [view, setView] = useState<"table" | "grid">("table");
   const { isGovt } = useGovtMode();
@@ -89,7 +91,9 @@ export default function AssetsPage() {
       (categoryFilter === "tourist" && isTouristSpot) ||
       (categoryFilter === "road" && (x.asset_type.toLowerCase().includes("road") || x.asset_type.toLowerCase().includes("expressway") || x.asset_type.toLowerCase().includes("highway") || x.asset_type.toLowerCase().includes("bridge"))) ||
       (categoryFilter === "power" && (x.asset_type.toLowerCase().includes("power") || x.asset_type.toLowerCase().includes("substation") || x.asset_type.toLowerCase().includes("turbine"))) ||
-      (categoryFilter === "emergency" && (x.asset_type.toLowerCase().includes("police") || x.asset_type.toLowerCase().includes("fire")));
+      (categoryFilter === "emergency" && (x.asset_type.toLowerCase().includes("police") || x.asset_type.toLowerCase().includes("fire"))) ||
+      (categoryFilter === "railway" && (x.asset_type.toLowerCase().includes("rail") || x.asset_type.toLowerCase().includes("tunnel") || x.name.toLowerCase().includes("railway") || x.name.toLowerCase().includes("tunnel") || x.asset_code.startsWith("TR-RLY-") || x.asset_code.startsWith("TR-RTE-") || x.asset_code.startsWith("TR-TNL-"))) ||
+      (categoryFilter === "river_bridge" && (x.asset_type.toLowerCase().includes("bridge") || x.asset_type.toLowerCase().includes("river") || x.name.toLowerCase().includes("bridge") || x.name.toLowerCase().includes("setu") || x.name.toLowerCase().includes("river") || x.asset_code.startsWith("TR-BRG-") || x.asset_code.startsWith("TR-RVR-")));
 
     const matchTourist = !touristOnly || isTouristSpot;
     return matchSearch && matchDistrict && matchCond && matchCategory && matchTourist;
@@ -251,6 +255,8 @@ export default function AssetsPage() {
             { id: "panchayat", label: "🌾 Gram Panchayats" },
             { id: "tourist", label: "✨ Tourist Landmarks" },
             { id: "road", label: "🛣️ Roads & Expressways" },
+            { id: "railway", label: "🚆 Rail Stations, Routes & Tunnels" },
+            { id: "river_bridge", label: "🌉 Bridges & Rivers" },
             { id: "power", label: "⚡ Power Stations" },
             { id: "emergency", label: "🚒 Police & Fire" },
           ].map((c) => {

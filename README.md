@@ -306,6 +306,7 @@ CivicLens-Core/
 ├── CHANGELOG.md                  # Chronological record of updates & releases
 ├── LICENSE.md                    # Apache 2.0 open-source license
 └── SECURITY.md                   # Security vulnerability reporting & disclosure guidelines
+```
 
 ---
 

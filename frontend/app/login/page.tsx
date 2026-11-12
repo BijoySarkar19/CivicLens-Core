@@ -1,10 +1,10 @@
 "use client";
 
-import { FormEvent, useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { FormEvent, useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { API_BASE } from "@/lib/api";
+import { API_BASE, setClientToken } from "@/lib/api";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { useGovtMode } from "@/lib/govt-mode";
@@ -24,6 +24,8 @@ import {
   ArrowRight,
   FileText,
   MapPin,
+  Crown,
+  Sparkles,
 } from "lucide-react";
 
 interface StoredGrievance {
@@ -40,12 +42,36 @@ interface StoredGrievance {
   date: string;
 }
 
-export default function LoginPage() {
+function LoginPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { isGovt } = useGovtMode();
 
+  const nextParam = searchParams.get("next");
+  const roleParam = searchParams.get("role");
+  const tabParam = searchParams.get("tab") || searchParams.get("mode");
+
+  const isAdminRequested = !!(
+    (nextParam && nextParam.toLowerCase().includes("admin")) ||
+    roleParam === "admin"
+  );
+
+  const isOfficerRequested = !!(
+    isAdminRequested ||
+    (nextParam &&
+      (nextParam.includes("dashboard") ||
+        nextParam.includes("work-orders") ||
+        nextParam.includes("incidents") ||
+        nextParam.includes("map") ||
+        nextParam.includes("assets"))) ||
+    roleParam === "officer" ||
+    tabParam === "officer"
+  );
+
   // Mode: "citizen" (Track & Sign In for complainers) OR "officer" (Command Center Auth)
-  const [authMode, setAuthMode] = useState<"citizen" | "officer">("citizen");
+  const [authMode, setAuthMode] = useState<"citizen" | "officer">(
+    isOfficerRequested ? "officer" : "citizen"
+  );
 
   // Citizen Track State
   const [citizenMethod, setCitizenMethod] = useState<"phone" | "email" | "code">("phone");
@@ -67,6 +93,13 @@ export default function LoginPage() {
   const [busy, setBusy] = useState(false);
   const [showPwd, setShowPwd] = useState(false);
 
+  // If redirected with intent, automatically sync authMode
+  useEffect(() => {
+    if (isOfficerRequested) {
+      setAuthMode("officer");
+    }
+  }, [isOfficerRequested]);
+
   // Load complaints from localStorage for citizen demo
   useEffect(() => {
     try {
@@ -74,7 +107,7 @@ export default function LoginPage() {
       if (stored) {
         setCitizenGrievances(JSON.parse(stored));
       } else {
-        // Pre-seed a sample Tripura complaint so the user sees real functionality immediately!
+        // Pre-seed sample Tripura complaints so the user sees real functionality immediately!
         const defaultSample: StoredGrievance[] = [
           {
             code: "TR-849201",
@@ -179,13 +212,14 @@ export default function LoginPage() {
 
     const targetEmail = (directEmail ?? email).trim();
     const targetPassword = directPassword ?? password;
+    const dest = nextParam || (targetEmail.includes("admin") ? "/admin" : "/dashboard");
 
     try {
       const body = new URLSearchParams();
       body.set("username", targetEmail);
       body.set("password", targetPassword);
 
-      const response = await fetch(`${API_BASE}/api/v1/auth/login`, {
+      const response = await fetch(`${API_BASE}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         credentials: "include",
@@ -193,8 +227,10 @@ export default function LoginPage() {
       });
 
       if (response.ok) {
-        document.cookie = "access_token=officer-token; path=/; max-age=86400; SameSite=Lax";
-        router.push("/dashboard");
+        const data = await response.json().catch(() => null);
+        const token = data?.access_token || "officer-token";
+        setClientToken(token);
+        router.push(dest);
         router.refresh();
         return;
       }
@@ -203,8 +239,8 @@ export default function LoginPage() {
     }
 
     // Demo session authorization: allow all verified Tripura demo accounts and default admin
-    document.cookie = "access_token=demo-officer-token; path=/; max-age=86400; SameSite=Lax";
-    router.push("/dashboard");
+    setClientToken("demo-officer-token");
+    router.push(dest);
     router.refresh();
   }
 
@@ -223,8 +259,8 @@ export default function LoginPage() {
         >
           {/* Card */}
           <div className={`rounded-3xl p-6 sm:p-10 shadow-2xl ${cardBg}`}>
-            {/* Mode Switcher: Complainer / Citizen vs Officer Command Center */}
-            <div className="flex rounded-2xl border p-1 mb-6 bg-white/5 border-white/10" role="tablist">
+            {/* Top Switcher: Citizen Redressal vs Officer Command Center */}
+            <div className="flex rounded-2xl bg-black/10 p-1 mb-8 border border-white/10" role="tablist">
               <button
                 type="button"
                 onClick={() => setAuthMode("citizen")}
@@ -299,6 +335,7 @@ export default function LoginPage() {
                     onClick={() => {
                       setCitizenMethod("email");
                       setCitizenVerified(false);
+                      setOtpSent(false);
                     }}
                     className={`font-bold pb-1 flex items-center gap-1.5 transition ${
                       citizenMethod === "email"
@@ -314,6 +351,7 @@ export default function LoginPage() {
                     onClick={() => {
                       setCitizenMethod("code");
                       setCitizenVerified(false);
+                      setOtpSent(false);
                     }}
                     className={`font-bold pb-1 flex items-center gap-1.5 transition ${
                       citizenMethod === "code"
@@ -321,42 +359,37 @@ export default function LoginPage() {
                         : "text-gray-500 hover:text-gray-300"
                     }`}
                   >
-                    <FileText size={13} /> Complaint Code
+                    <KeyRound size={13} /> Reference Code
                   </button>
                 </div>
 
                 {trackError && (
-                  <div className="mt-4 rounded-xl border border-red-400/30 bg-red-400/10 p-3 text-xs text-red-200 flex items-center gap-2">
-                    <AlertTriangle size={14} />
-                    {trackError}
+                  <div className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-300 flex items-center gap-2">
+                    <AlertTriangle size={14} className="shrink-0" />
+                    <span>{trackError}</span>
                   </div>
                 )}
 
-                {/* 1A. PHONE + OTP METHOD */}
+                {/* 1A. PHONE + OTP */}
                 {citizenMethod === "phone" && !citizenVerified && (
                   <div className="mt-5 space-y-4">
                     <div>
-                      <label className="block text-xs font-bold mb-1">
-                        Enter 10-Digit Mobile Phone Number
+                      <label className={`block text-xs font-bold mb-1 ${isGovt ? "text-gray-700" : "text-slate-300"}`}>
+                        Registered 10-Digit Mobile Number *
                       </label>
-                      <div className={`flex items-center overflow-hidden rounded-xl border transition ${
-                        isGovt
-                          ? "border-gray-300 bg-white focus-within:border-[#0a5c9e] focus-within:ring-2 focus-within:ring-[#0a5c9e]/20"
-                          : "border-white/10 bg-[#0b1726] focus-within:border-cyan-400 focus-within:ring-2 focus-within:ring-cyan-400/20"
-                      }`}>
-                        <div className={`flex items-center gap-1.5 px-3.5 py-3 border-r select-none font-bold text-sm shrink-0 ${
-                          isGovt ? "border-gray-200 bg-gray-50 text-gray-800" : "border-white/10 bg-white/5 text-slate-200"
+                      <div className="flex gap-2">
+                        <span className={`inline-flex items-center px-3 rounded-xl border font-mono text-xs font-bold ${
+                          isGovt ? "bg-gray-100 border-gray-300 text-gray-700" : "bg-white/5 border-white/10 text-gray-300"
                         }`}>
-                          <span className="text-base" role="img" aria-label="India">🇮🇳</span>
-                          <span>+91</span>
-                        </div>
+                          +91
+                        </span>
                         <input
                           type="tel"
-                          value={citizenPhone}
-                          onChange={(e) => setCitizenPhone(e.target.value.replace(/[^0-9]/g, "").slice(0, 10))}
-                          placeholder="98765 43210"
                           maxLength={10}
-                          className="w-full bg-transparent px-3.5 py-3 text-sm outline-none placeholder:text-gray-500 font-medium text-slate-100"
+                          value={citizenPhone}
+                          onChange={(e) => setCitizenPhone(e.target.value.replace(/\D/g, ""))}
+                          className="field flex-1"
+                          placeholder="9876543210"
                         />
                       </div>
                     </div>
@@ -365,41 +398,43 @@ export default function LoginPage() {
                       <button
                         type="button"
                         onClick={handleSendOtp}
-                        className={`w-full rounded-xl py-3 font-bold transition active:scale-95 ${
-                          isGovt ? "bg-[#0a5c9e] text-white" : "bg-cyan-400 text-slate-950"
+                        className={`w-full rounded-xl py-3 text-sm font-bold transition ${
+                          isGovt
+                            ? "bg-[#0a5c9e] text-white hover:bg-[#084d87]"
+                            : "bg-cyan-400 text-slate-950 font-black hover:bg-cyan-300 shadow-lg shadow-cyan-400/20"
                         }`}
                       >
-                        Send Verification OTP →
+                        Send One-Time Password (OTP)
                       </button>
                     ) : (
-                      <div className="space-y-3 rounded-2xl border border-emerald-400/20 bg-emerald-400/5 p-4">
+                      <div className="space-y-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4">
                         <div className="flex items-center justify-between text-xs">
-                          <span className="text-emerald-400 font-bold">✓ OTP Sent to +91 {citizenPhone}</span>
-                          <span className="text-gray-400 font-mono">Demo OTP: {generatedOtp}</span>
+                          <span className="text-emerald-400 font-bold flex items-center gap-1.5">
+                            <CheckCircle2 size={14} /> OTP Sent to +91 {citizenPhone}
+                          </span>
+                          <span className="font-mono text-emerald-300 font-bold bg-black/40 px-2 py-0.5 rounded">
+                            Demo OTP: {generatedOtp}
+                          </span>
                         </div>
-
                         <div>
-                          <label className="block text-xs font-bold mb-1">
-                            Enter 6-Digit OTP
+                          <label className="block text-xs font-bold text-slate-300 mb-1">
+                            Enter 6-Digit OTP *
                           </label>
                           <input
                             type="text"
-                            value={enteredOtp}
-                            onChange={(e) => setEnteredOtp(e.target.value.slice(0, 6))}
                             maxLength={6}
-                            placeholder="e.g. 123456"
-                            className="field text-center font-mono tracking-widest text-lg font-bold"
+                            value={enteredOtp}
+                            onChange={(e) => setEnteredOtp(e.target.value.replace(/\D/g, ""))}
+                            className="field tracking-widest text-center text-lg font-mono font-bold"
+                            placeholder="000000"
                           />
                         </div>
-
                         <button
                           type="button"
                           onClick={handleVerifyOtp}
-                          className={`w-full rounded-xl py-3 font-bold transition active:scale-95 ${
-                            isGovt ? "bg-[#0a5c9e] text-white" : "bg-cyan-400 text-slate-950 font-black"
-                          }`}
+                          className="w-full rounded-xl bg-emerald-500 hover:bg-emerald-400 py-3 text-xs font-black text-slate-950 transition shadow-lg shadow-emerald-500/20"
                         >
-                          Verify OTP &amp; View My Complaints
+                          Verify OTP &amp; Track Complaints
                         </button>
                       </div>
                     )}
@@ -410,130 +445,141 @@ export default function LoginPage() {
                 {citizenMethod === "email" && !citizenVerified && (
                   <form onSubmit={handleCitizenEmailLookup} className="mt-5 space-y-4">
                     <div>
-                      <label className="block text-xs font-bold mb-1">
-                        Registered Complainant Email
+                      <label className={`block text-xs font-bold mb-1 ${isGovt ? "text-gray-700" : "text-slate-300"}`}>
+                        Registered Citizen Email Address *
                       </label>
                       <input
                         type="email"
-                        required
                         value={citizenEmail}
                         onChange={(e) => setCitizenEmail(e.target.value)}
-                        placeholder="citizen@example.com"
                         className="field"
+                        placeholder="e.g. citizen@example.com"
+                        required
                       />
                     </div>
                     <button
                       type="submit"
-                      className={`w-full rounded-xl py-3 font-bold transition active:scale-95 ${
-                        isGovt ? "bg-[#0a5c9e] text-white" : "bg-cyan-400 text-slate-950 font-black"
+                      className={`w-full rounded-xl py-3 text-sm font-bold transition ${
+                        isGovt
+                          ? "bg-[#0a5c9e] text-white hover:bg-[#084d87]"
+                          : "bg-cyan-400 text-slate-950 font-black hover:bg-cyan-300 shadow-lg shadow-cyan-400/20"
                       }`}
                     >
-                      Search Complaints by Email →
+                      Find Registered Grievances
                     </button>
                   </form>
                 )}
 
-                {/* 1C. CODE LOOKUP */}
+                {/* 1C. REFERENCE CODE LOOKUP */}
                 {citizenMethod === "code" && !citizenVerified && (
                   <form onSubmit={handleCodeLookup} className="mt-5 space-y-4">
                     <div>
-                      <label className="block text-xs font-bold mb-1">
-                        Complaint Tracking Code
+                      <label className={`block text-xs font-bold mb-1 ${isGovt ? "text-gray-700" : "text-slate-300"}`}>
+                        Complaint Reference Tracking Code *
                       </label>
                       <input
                         type="text"
-                        required
                         value={citizenCode}
-                        onChange={(e) => setCitizenCode(e.target.value)}
-                        placeholder="e.g. TR-849201 or INC-..."
-                        className="field font-mono font-bold uppercase"
+                        onChange={(e) => setCitizenCode(e.target.value.toUpperCase())}
+                        className="field font-mono uppercase tracking-wider"
+                        placeholder="TR-XXXXXX"
+                        required
                       />
                     </div>
                     <button
                       type="submit"
-                      className={`w-full rounded-xl py-3 font-bold transition active:scale-95 ${
-                        isGovt ? "bg-[#0a5c9e] text-white" : "bg-cyan-400 text-slate-950 font-black"
+                      className={`w-full rounded-xl py-3 text-sm font-bold transition ${
+                        isGovt
+                          ? "bg-[#0a5c9e] text-white hover:bg-[#084d87]"
+                          : "bg-cyan-400 text-slate-950 font-black hover:bg-cyan-300 shadow-lg shadow-cyan-400/20"
                       }`}
                     >
-                      Track Complaint Status →
+                      Track Single Grievance
                     </button>
                   </form>
                 )}
 
-                {/* VERIFIED CITIZEN COMPLAINT LIST & TIMELINE */}
+                {/* RESULTS: LIVE GRIEVANCE STATUS TIMELINE */}
                 {citizenVerified && (
-                  <div className="mt-5 space-y-4">
-                    <div className="flex items-center justify-between border-b border-white/10 pb-2">
-                      <span className="text-xs text-emerald-400 font-bold flex items-center gap-1">
-                        <CheckCircle2 size={14} /> Verified Citizen Session
+                  <div className="mt-6 space-y-4">
+                    <div className="flex items-center justify-between border-b pb-2">
+                      <span className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+                        <UserCheck size={14} /> Identity Verified · {citizenGrievances.length} Active Records Found
                       </span>
                       <button
                         type="button"
-                        onClick={() => setCitizenVerified(false)}
-                        className="text-xs text-cyan-300 hover:underline"
+                        onClick={() => {
+                          setCitizenVerified(false);
+                          setOtpSent(false);
+                        }}
+                        className="text-[11px] text-gray-400 hover:text-white underline"
                       >
-                        Change search
+                        Change Search
                       </button>
                     </div>
-
-                    <p className="text-xs text-gray-400">
-                      Showing complaints registered under your credentials in Tripura:
-                    </p>
 
                     <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
                       {citizenGrievances.map((g) => (
                         <div
                           key={g.code}
-                          className="rounded-2xl border p-4 transition bg-white/5 border-white/10 hover:border-cyan-400/30"
+                          className={`rounded-2xl border p-4 transition ${
+                            isGovt ? "border-gray-200 bg-gray-50/80" : "border-white/10 bg-white/[.03]"
+                          }`}
                         >
                           <div className="flex items-start justify-between gap-2">
                             <div>
-                              <span className="font-mono text-xs font-black text-cyan-300">
+                              <span className="font-mono text-xs font-black text-cyan-400 bg-cyan-950/40 px-2 py-0.5 rounded border border-cyan-800/40">
                                 {g.code}
                               </span>
-                              <h3 className="font-bold text-sm mt-0.5 text-white">
+                              <h3 className={`font-bold text-sm mt-1.5 ${isGovt ? "text-[#0d1b2a]" : "text-white"}`}>
                                 {g.title}
                               </h3>
+                              <p className="text-[11px] text-gray-500 mt-0.5 flex items-center gap-1">
+                                <MapPin size={11} /> {g.landmark ? `${g.landmark}, ` : ""}{g.city || "Agartala"}, {g.district || "West Tripura"}
+                              </p>
                             </div>
-                            <span className="badge text-[11px] font-bold uppercase text-emerald-300 border-emerald-400/30 bg-emerald-400/10 whitespace-nowrap shrink-0">
-                              {g.status.replace(/_/g, " ")}
+                            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20">
+                              {g.status.replace("_", " ")}
                             </span>
                           </div>
 
-                          <div className="mt-3 flex flex-wrap gap-2 text-xs text-gray-400">
-                            <span className="badge">
-                              <MapPin size={10} /> {g.district ?? "Tripura"} {g.city ? `(${g.city})` : ""}
-                            </span>
-                            <span className="badge">{g.category}</span>
-                            <span className="badge">Severity: {g.severity}</span>
-                          </div>
-
-                          {g.landmark && (
-                            <p className="mt-2 text-xs text-gray-400">
-                              <strong className="text-gray-300">Landmark:</strong> {g.landmark}
-                            </p>
-                          )}
-
-                          <div className="mt-3 border-t border-white/5 pt-2 flex items-center justify-between text-[11px] text-gray-500">
-                            <span>Filed: {new Date(g.date).toLocaleDateString("en-IN", { dateStyle: "medium" })}</span>
-                            <span className="text-emerald-400 font-medium">✓ Under Active Monitoring</span>
+                          {/* Progress Stepper */}
+                          <div className="mt-3 grid grid-cols-4 gap-1 text-center text-[9px] font-bold">
+                            <div className="rounded bg-emerald-500/20 text-emerald-300 py-1 border border-emerald-500/30">
+                              ✓ Submitted
+                            </div>
+                            <div className={`rounded py-1 border ${
+                              g.status !== "submitted"
+                                ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
+                                : "bg-white/5 text-gray-500 border-white/5"
+                            }`}>
+                              Verified
+                            </div>
+                            <div className={`rounded py-1 border ${
+                              g.status === "work_assigned" || g.status === "resolved"
+                                ? "bg-cyan-500/20 text-cyan-300 border-cyan-500/30"
+                                : "bg-white/5 text-gray-500 border-white/5"
+                            }`}>
+                              In Progress
+                            </div>
+                            <div className={`rounded py-1 border ${
+                              g.status === "resolved"
+                                ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
+                                : "bg-white/5 text-gray-500 border-white/5"
+                            }`}>
+                              Closed
+                            </div>
                           </div>
                         </div>
                       ))}
-
-                      {citizenGrievances.length === 0 && (
-                        <div className="rounded-xl border border-dashed border-white/10 p-6 text-center text-xs text-gray-400">
-                          No matching complaints found. File a new complaint anytime from the Report page.
-                        </div>
-                      )}
                     </div>
 
-                    <div className="pt-2 text-center">
+                    <div className="pt-2">
                       <Link
                         href="/report"
-                        className={`inline-flex items-center gap-1.5 text-xs font-bold ${accent} hover:underline`}
+                        className="inline-flex items-center gap-1.5 text-xs font-bold text-cyan-400 hover:underline"
                       >
-                        File a New Tripura Grievance →
+                        + Report Another Infrastructure Issue <ArrowRight size={12} />
                       </Link>
                     </div>
                   </div>
@@ -541,12 +587,27 @@ export default function LoginPage() {
               </div>
             )}
 
-            {/* TAB 2: OFFICER / WORKER COMMAND CENTER LOGIN */}
+            {/* TAB 2: OFFICER & ADMIN LOGIN */}
             {authMode === "officer" && (
               <div>
-                <div className="flex items-center gap-3 mb-4">
-                  <div className={`grid h-10 w-10 place-items-center rounded-xl bg-cyan-400/15 text-cyan-300`}>
-                    <Lock size={18} />
+                {/* Admin Access Notice Banner */}
+                {isAdminRequested && (
+                  <div className="mb-4 rounded-2xl border border-amber-400/40 bg-amber-400/10 p-3.5 text-xs text-amber-200 flex items-start gap-2.5">
+                    <Crown size={18} className="text-amber-300 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-bold text-amber-300 text-sm">Admin Command Center Sign-In</p>
+                      <p className="text-[11px] opacity-90 mt-0.5">
+                        Administrator authorization is required for <strong>/admin</strong>. Click <strong>&quot;👑 Super Admin&quot;</strong> below for immediate 1-click access.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex items-center gap-3 mb-5">
+                  <div className={`grid h-10 w-10 place-items-center rounded-xl border ${
+                    isGovt ? "bg-blue-50 border-blue-200 text-[#0a5c9e]" : "bg-cyan-500/10 border-cyan-400/20 text-cyan-300"
+                  }`}>
+                    <ShieldCheck size={20} />
                   </div>
                   <div>
                     <h2 className={`font-bold text-lg sm:text-xl ${isGovt ? "text-[#0d1b2a]" : "text-white"}`}>
@@ -626,7 +687,7 @@ export default function LoginPage() {
                         : "bg-gradient-to-r from-cyan-400 to-blue-500 text-slate-950 font-black hover:shadow-cyan-400/25 shadow-lg"
                     }`}
                   >
-                    {busy ? "Signing in…" : "Sign In to Command Center"}
+                    {busy ? "Signing in…" : isAdminRequested ? "Sign In & Enter Admin Center →" : "Sign In to Command Center"}
                   </button>
                 </form>
 
@@ -643,14 +704,14 @@ export default function LoginPage() {
                         setPassword("AdminPass123!");
                         submitOfficer(undefined, "admin@civiclens.local", "AdminPass123!");
                       }}
-                      className={`rounded-xl border p-2 text-left text-xs transition ${
+                      className={`rounded-xl border p-2 text-left text-xs transition cursor-pointer ${
                         isGovt
-                          ? "border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 font-bold shadow-xs"
-                          : "border-amber-400/30 bg-amber-400/10 text-amber-300 hover:bg-amber-400/20"
+                          ? "border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 font-bold shadow-xs ring-2 ring-amber-400/30"
+                          : "border-amber-400/50 bg-amber-400/15 text-amber-300 hover:bg-amber-400/25 ring-2 ring-amber-400/30"
                       }`}
                     >
-                      <p className="font-bold">👑 Super Admin</p>
-                      <span className="text-[10px] opacity-80">Full System Oversight</span>
+                      <p className="font-bold flex items-center gap-1">👑 Super Admin</p>
+                      <span className="text-[10px] opacity-90 block mt-0.5 text-amber-400 font-semibold">→ Enter /admin</span>
                     </button>
 
                     <button
@@ -660,14 +721,14 @@ export default function LoginPage() {
                         setPassword("AdminPass123!");
                         submitOfficer(undefined, "pwd.officer@tripura.gov.in", "AdminPass123!");
                       }}
-                      className={`rounded-xl border p-2 text-left text-xs transition ${
+                      className={`rounded-xl border p-2 text-left text-xs transition cursor-pointer ${
                         isGovt
                           ? "border-blue-300 bg-blue-50 hover:bg-blue-100 text-blue-900 font-bold shadow-xs"
                           : "border-blue-400/30 bg-blue-400/10 text-blue-300 hover:bg-blue-400/20"
                       }`}
                     >
                       <p className="font-bold">🏗️ PWD Engineer</p>
-                      <span className="text-[10px] opacity-80">Roads &amp; Bridges Ops</span>
+                      <span className="text-[10px] opacity-80 block mt-0.5">Roads &amp; Bridges Ops</span>
                     </button>
 
                     <button
@@ -677,14 +738,14 @@ export default function LoginPage() {
                         setPassword("AdminPass123!");
                         submitOfficer(undefined, "dws.inspector@tripura.gov.in", "AdminPass123!");
                       }}
-                      className={`rounded-xl border p-2 text-left text-xs transition ${
+                      className={`rounded-xl border p-2 text-left text-xs transition cursor-pointer ${
                         isGovt
                           ? "border-green-300 bg-green-50 hover:bg-green-100 text-green-900 font-bold shadow-xs"
                           : "border-emerald-400/30 bg-emerald-400/10 text-emerald-300 hover:bg-emerald-400/20"
                       }`}
                     >
                       <p className="font-bold">💧 DWS Inspector</p>
-                      <span className="text-[10px] opacity-80">Water &amp; Sanit. Audits</span>
+                      <span className="text-[10px] opacity-80 block mt-0.5">Water &amp; Sanit. Audits</span>
                     </button>
                   </div>
                 </div>
@@ -701,5 +762,19 @@ export default function LoginPage() {
       </main>
       <Footer />
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="grid min-h-screen place-items-center bg-[#07111f] text-white">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-cyan-400 border-t-transparent" />
+        </div>
+      }
+    >
+      <LoginPageContent />
+    </Suspense>
   );
 }

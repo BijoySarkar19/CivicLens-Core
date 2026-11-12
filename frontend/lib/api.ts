@@ -6,44 +6,46 @@ export type ApiError = {
   request_id?: string;
 };
 
-let handlingAuthFailure = false;
+export function getClientToken(): string | null {
+  if (typeof window === "undefined") return null;
+  const fromLocal = localStorage.getItem("cl_token");
+  if (fromLocal) return fromLocal;
+  const match = document.cookie.match(/(?:^|;\s*)access_token=([^;]+)/);
+  return match ? match[1] : null;
+}
 
-async function handleAuthenticationFailure() {
-  if (handlingAuthFailure || typeof window === "undefined") {
-    return;
-  }
-
-  handlingAuthFailure = true;
-
+export function setClientToken(token: string) {
+  if (typeof window === "undefined") return;
   try {
-    // Logout endpoint is public and clears the HttpOnly cookie.
-    await fetch(`${API_BASE}/auth/logout`, {
-      method: "POST",
-      credentials: "include",
-      cache: "no-store",
-    });
-  } catch {
-    // Even if the API is unavailable, continue to the login page.
-  }
+    localStorage.setItem("cl_token", token);
+  } catch {}
+  document.cookie = `access_token=${token}; path=/; max-age=86400; SameSite=Lax`;
+}
 
-  const currentPath =
-    window.location.pathname + window.location.search;
-
-  const loginUrl =
-    `/login?next=${encodeURIComponent(currentPath)}`;
-
-  window.location.replace(loginUrl);
+export function clearClientToken() {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem("cl_token");
+  } catch {}
+  document.cookie = "access_token=; path=/; max-age=0; SameSite=Lax";
 }
 
 export async function apiFetch<T>(
   path: string,
   options: RequestInit = {},
 ): Promise<T> {
+  const token = getClientToken();
+  const authHeaders: Record<string, string> = {};
+  if (token && !token.startsWith("demo-")) {
+    authHeaders["Authorization"] = `Bearer ${token}`;
+  }
+
   const response = await fetch(`${API_BASE}${path}`, {
     ...options,
     credentials: "include",
     headers: {
       "Content-Type": "application/json",
+      ...authHeaders,
       ...(options.headers ?? {}),
     },
     cache: "no-store",
@@ -51,7 +53,6 @@ export async function apiFetch<T>(
 
   if (!response.ok) {
     let body: ApiError = {};
-
     try {
       body = await response.json();
     } catch {
@@ -67,11 +68,6 @@ export async function apiFetch<T>(
 
     error.status = response.status;
     error.requestId = body.request_id;
-
-    if (response.status === 401) {
-      void handleAuthenticationFailure();
-    }
-
     throw error;
   }
 
@@ -79,9 +75,12 @@ export async function apiFetch<T>(
 }
 
 export async function logout() {
-  await fetch(`${API_BASE}/auth/logout`, {
-    method: "POST",
-    credentials: "include",
-    cache: "no-store",
-  });
+  clearClientToken();
+  try {
+    await fetch(`${API_BASE}/auth/logout`, {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+    });
+  } catch {}
 }

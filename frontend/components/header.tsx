@@ -18,6 +18,7 @@ import {
   Users,
   BarChart3,
   Sparkles,
+  Crown,
 } from "lucide-react";
 import { logout } from "@/lib/api";
 import { useGovtMode } from "@/lib/govt-mode";
@@ -168,16 +169,30 @@ export function Header({ publicSite = false }: { publicSite?: boolean }) {
             </div>
 
             {publicSite && (
-              <Link
-                href="/report"
-                className={`hidden rounded-xl border px-3.5 py-2 text-xs font-bold transition sm:inline-flex ${
-                  isGovt
-                    ? "border-[#0a5c9e]/30 text-[#0a5c9e] hover:bg-[#0a5c9e]/10"
-                    : "border-cyan-300/20 text-cyan-200 hover:bg-cyan-300/10"
-                }`}
-              >
-                Report an Issue
-              </Link>
+              <>
+                <Link
+                  href="/login?next=/admin"
+                  className={`rounded-xl border px-3 py-1.5 text-xs font-bold transition inline-flex items-center gap-1.5 ${
+                    isGovt
+                      ? "border-amber-400 bg-amber-50 text-amber-900 hover:bg-amber-100 shadow-xs"
+                      : "border-amber-400/40 bg-amber-400/10 text-amber-300 hover:bg-amber-400/20"
+                  }`}
+                  title="Direct access to Administrator Command & Control"
+                >
+                  <Crown size={13} />
+                  <span>Admin Portal</span>
+                </Link>
+                <Link
+                  href="/report"
+                  className={`hidden rounded-xl border px-3.5 py-2 text-xs font-bold transition sm:inline-flex ${
+                    isGovt
+                      ? "border-[#0a5c9e]/30 text-[#0a5c9e] hover:bg-[#0a5c9e]/10"
+                      : "border-cyan-300/20 text-cyan-200 hover:bg-cyan-300/10"
+                  }`}
+                >
+                  Report an Issue
+                </Link>
+              </>
             )}
 
             {!publicSite && (

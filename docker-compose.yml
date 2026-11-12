@@ -133,7 +133,7 @@ services:
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-civiclens}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-change-this-minio-password}
 
-      CIVICLENS_AI_ENABLED: ${CIVICLENS_AI_ENABLED:-false}
+      CIVICLENS_AI_ENABLED: ${CIVICLENS_AI_ENABLED:-true}
 
     ports:
       - "8000:8000"
@@ -193,7 +193,7 @@ services:
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-civiclens}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-change-this-minio-password}
 
-      CIVICLENS_AI_ENABLED: ${CIVICLENS_AI_ENABLED:-false}
+      CIVICLENS_AI_ENABLED: ${CIVICLENS_AI_ENABLED:-true}
 
     command:
       [

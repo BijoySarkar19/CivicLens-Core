@@ -41,6 +41,7 @@ export default function AssetsPage() {
   const [query, setQuery] = useState("");
   const [districtFilter, setDistrictFilter] = useState("All Districts");
   const [conditionFilter, setConditionFilter] = useState("all");
+  const [touristOnly, setTouristOnly] = useState(false);
   const [view, setView] = useState<"table" | "grid">("table");
   const { isGovt } = useGovtMode();
 
@@ -66,7 +67,20 @@ export default function AssetsPage() {
       districtFilter === "All Districts" || x.district === districtFilter;
     const matchCond =
       conditionFilter === "all" || x.condition === conditionFilter;
-    return matchSearch && matchDistrict && matchCond;
+    const isTouristSpot =
+      x.asset_type.toLowerCase().includes("heritage") ||
+      x.asset_type.toLowerCase().includes("touris") ||
+      x.asset_type.toLowerCase().includes("park") ||
+      x.name.toLowerCase().includes("palace") ||
+      x.name.toLowerCase().includes("unakoti") ||
+      x.name.toLowerCase().includes("neermahal") ||
+      x.name.toLowerCase().includes("temple") ||
+      x.name.toLowerCase().includes("lake") ||
+      x.name.toLowerCase().includes("jampui") ||
+      x.name.toLowerCase().includes("chabimura") ||
+      x.name.toLowerCase().includes("pilak");
+    const matchTourist = !touristOnly || isTouristSpot;
+    return matchSearch && matchDistrict && matchCond && matchTourist;
   });
 
   const accent = isGovt ? "text-[#0a5c9e]" : "text-cyan-300";
@@ -162,6 +176,24 @@ export default function AssetsPage() {
             <option value="poor" className={isGovt ? "bg-white text-gray-900" : "bg-[#0b1726] text-white"}>Poor</option>
             <option value="critical" className={isGovt ? "bg-white text-gray-900" : "bg-[#0b1726] text-white"}>Critical</option>
           </select>
+
+          {/* Tourist & Heritage filter button */}
+          <button
+            type="button"
+            onClick={() => setTouristOnly(!touristOnly)}
+            className={`rounded-xl border px-3.5 py-2 text-xs font-bold transition flex items-center gap-1.5 ${
+              touristOnly
+                ? isGovt
+                  ? "bg-[#0a5c9e] text-white border-[#0a5c9e]"
+                  : "bg-cyan-400 text-slate-950 border-cyan-400 font-black shadow-md"
+                : isGovt
+                ? "border-gray-300 bg-white text-gray-700 hover:bg-gray-100"
+                : "border-white/10 bg-[#0b1726] text-slate-300 hover:text-white hover:bg-white/5"
+            }`}
+          >
+            <span>🏛️</span>
+            <span>{touristOnly ? "Showing Tourist Spots Only" : "Filter Tourist Spots"}</span>
+          </button>
 
           {/* View toggle */}
           <div

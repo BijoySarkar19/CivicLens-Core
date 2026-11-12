@@ -474,17 +474,24 @@ export default function ReportPage() {
                     <Phone size={14} className={accent} aria-hidden="true" />
                     Mobile Phone Number <span className="text-xs font-normal text-gray-500">(Optional)</span>
                   </label>
-                  <div className="relative flex items-center">
-                    <span className={`absolute left-3 text-sm font-bold flex items-center gap-1 ${isGovt ? "text-gray-600" : "text-slate-400"}`}>
-                      🇮🇳 +91
-                    </span>
+                  <div className={`flex items-center overflow-hidden rounded-xl border transition ${
+                    isGovt
+                      ? "border-gray-300 bg-white focus-within:border-[#0a5c9e] focus-within:ring-2 focus-within:ring-[#0a5c9e]/20"
+                      : "border-white/10 bg-[#0b1726] focus-within:border-cyan-400 focus-within:ring-2 focus-within:ring-cyan-400/20"
+                  }`}>
+                    <div className={`flex items-center gap-1.5 px-3.5 py-3 border-r select-none font-bold text-sm shrink-0 ${
+                      isGovt ? "border-gray-200 bg-gray-50 text-gray-800" : "border-white/10 bg-white/5 text-slate-200"
+                    }`}>
+                      <span className="text-base" role="img" aria-label="India">🇮🇳</span>
+                      <span>+91</span>
+                    </div>
                     <input
                       id="phone-field"
                       name="phone"
                       type="tel"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, "").slice(0, 10))}
-                      className="field pl-20"
+                      className="w-full bg-transparent px-3.5 py-3 text-sm outline-none placeholder:text-gray-500 font-medium text-slate-100"
                       placeholder="98765 43210"
                       maxLength={10}
                     />
@@ -503,15 +510,17 @@ export default function ReportPage() {
                     id="category-field"
                     name="category"
                     required
-                    className="field font-medium"
+                    defaultValue=""
+                    className="field font-medium text-sm"
                   >
+                    <option value="" disabled>-- Select Utility Category (Required) --</option>
                     <option value="Road">Roadways &amp; Pavement (PWD)</option>
                     <option value="Streetlight">Streetlights &amp; Electricity (TSECL)</option>
                     <option value="Drainage">Drainage &amp; Monsoon Flood Defense</option>
                     <option value="Water">Drinking Water Supply (DWS Tripura)</option>
                     <option value="Waste">Municipal Solid Waste &amp; Cleaning</option>
                     <option value="Bridge">Bridges, Culverts &amp; Flyovers</option>
-                    <option value="Park">Public Spaces &amp; Heritage Sites</option>
+                    <option value="Park">Public Spaces, Heritage &amp; Tourist Sites</option>
                     <option value="Other">Other Urban Municipal Facility</option>
                   </select>
                 </div>

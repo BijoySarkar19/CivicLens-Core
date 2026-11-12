@@ -94,7 +94,7 @@ async def security_and_request_middleware(request: Request, call_next):
 
 @app.get("/health", tags=["System"])
 def health():
-    return {"status": "healthy", "service": "civiclens-core-api", "part": "part-1"}
+    return {"status": "healthy", "service": "civiclens-ai-platform", "version": "2.1.0", "part": "part-1"}
 
 
 @app.get("/ready", tags=["System"])
@@ -111,7 +111,7 @@ def ready():
         "status": "ready" if db_ok else "degraded",
         "database": "ok" if db_ok else "unavailable",
         "redis": "configured",
-        "part": "part-1",
+        "version": "2.1.0",
         "ai_enabled": settings.civiclens_ai_enabled,
     }
 
@@ -119,9 +119,9 @@ def ready():
 @app.get("/api/v1", tags=["System"])
 def api_root():
     return {
-        "name": "CivicLens Core API",
+        "name": "CivicLens AI Platform API",
         "version": "v1",
-        "part": "Part 1",
+        "platform_version": "2.1.0",
         "ai_enabled": settings.civiclens_ai_enabled,
         "docs": "/docs",
     }

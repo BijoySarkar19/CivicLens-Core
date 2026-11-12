@@ -54,7 +54,7 @@ const features = [
 const stats = [
   { label: "Infrastructure Assets", value: "Real-time", icon: Database },
   { label: "Active Incidents", value: "Live Tracking", icon: Bell },
-  { label: "Districts Covered", value: "All India", icon: Globe },
+  { label: "Tripura Districts", value: "8 / 8 Active", icon: Globe },
   { label: "Citizen Reports", value: "24×7 Open", icon: Users },
 ];
 

@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     secret_key: str = "change-me-in-local-env"
     database_url: str = "postgresql+psycopg://civiclens:civiclens@db:5432/civiclens"
     redis_url: str = "redis://redis:6379/0"
-    civiclens_ai_enabled: bool = False
+    civiclens_ai_enabled: bool = True
     cors_origins: str = "http://localhost:3000"
     admin_email: str = "admin@example.com"
     admin_password: str = "change-this-password"

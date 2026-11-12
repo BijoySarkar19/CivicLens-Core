@@ -17,6 +17,7 @@ import {
   Settings,
   Users,
   BarChart3,
+  Sparkles,
 } from "lucide-react";
 import { logout } from "@/lib/api";
 import { useGovtMode } from "@/lib/govt-mode";
@@ -30,6 +31,7 @@ const links = [
   { href: "/inspections", label: "Inspections", icon: ClipboardCheck },
   { href: "/work-orders", label: "Work Orders", icon: Wrench },
   { href: "/map", label: "GIS Map", icon: Map },
+  { href: "/ai", label: "Predictive AI", icon: Sparkles },
   { href: "/admin", label: "Admin", icon: Settings },
 ];
 
@@ -152,15 +154,25 @@ export function Header({ publicSite = false }: { publicSite?: boolean }) {
             </nav>
           )}
 
-          {/* Right side controls */}
-          <div className="flex items-center gap-2">
-            {/* Govt Mode Toggle — always visible */}
-            <GovtModeToggle />
+          {/* Right side controls - Clearly separated from Admin button */}
+          <div className="flex items-center gap-3">
+            {/* Visual separator to prevent Admin and Modern View toggle from merging */}
+            <div
+              className={`hidden md:block h-6 w-px ${
+                isGovt ? "bg-gray-300" : "bg-white/15"
+              }`}
+              aria-hidden="true"
+            />
+
+            {/* Govt Mode Toggle — always distinctly positioned */}
+            <div className="shrink-0">
+              <GovtModeToggle />
+            </div>
 
             {publicSite && (
               <Link
                 href="/report"
-                className={`hidden rounded-xl border px-3 py-2 text-sm font-medium transition sm:inline-flex ${
+                className={`hidden rounded-xl border px-3.5 py-2 text-xs font-bold transition sm:inline-flex ${
                   isGovt
                     ? "border-[#0a5c9e]/30 text-[#0a5c9e] hover:bg-[#0a5c9e]/10"
                     : "border-cyan-300/20 text-cyan-200 hover:bg-cyan-300/10"
@@ -171,29 +183,18 @@ export function Header({ publicSite = false }: { publicSite?: boolean }) {
             )}
 
             {!publicSite && (
-              <>
-                <Link
-                  href="/report"
-                  className={`hidden rounded-xl border px-3 py-2 text-sm font-medium transition sm:inline-flex ${
-                    isGovt
-                      ? "border-gray-200 text-gray-600 hover:bg-gray-100"
-                      : "border-white/10 text-slate-300 hover:bg-white/5"
-                  }`}
-                >
-                  Report Issue
-                </Link>
-                <button
-                  onClick={signOut}
-                  className={`rounded-xl p-2 transition ${
-                    isGovt
-                      ? "text-gray-500 hover:bg-gray-100 hover:text-gray-900"
-                      : "text-slate-400 hover:bg-white/10 hover:text-white"
-                  }`}
-                  aria-label="Sign out of CivicLens Core"
-                >
-                  <LogOut size={18} aria-hidden="true" />
-                </button>
-              </>
+              <button
+                onClick={signOut}
+                className={`rounded-xl p-2 transition ml-1 ${
+                  isGovt
+                    ? "text-gray-500 hover:bg-gray-100 hover:text-gray-900"
+                    : "text-slate-400 hover:bg-white/10 hover:text-white"
+                }`}
+                aria-label="Sign out of CivicLens Core"
+                title="Sign Out"
+              >
+                <LogOut size={18} aria-hidden="true" />
+              </button>
             )}
 
             {/* Mobile menu button */}

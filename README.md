@@ -33,11 +33,12 @@
 <p align="center">
   <a href="#-overview">Overview</a> •
   <a href="#-complete-unified-architecture">Unified Architecture</a> •
+  <a href="#-project-directory-structure">Folder Structure</a> •
   <a href="#-ai-predictive-decision-layer">AI Decision Engine</a> •
   <a href="#-tripura-infrastructure-70-assets">Tripura Assets &amp; Panchayats</a> •
   <a href="#-human-resources--employee-dossier">HR &amp; Personnel Dossier</a> •
-  <a href="#-docker--local-deployment">Docker &amp; Quickstart</a> •
-  <a href="#-security--compliance">Security &amp; Standards</a>
+  <a href="#-docker--quickstart">Docker &amp; Endpoints</a> •
+  <a href="#-security--standards-compliance">Security &amp; Standards</a>
 </p>
 
 </div>
@@ -197,19 +198,96 @@ The `/admin` command center provides enterprise personnel oversight:
 git clone https://github.com/BijoySarkar19/CivicLens-Core.git
 cd CivicLens-Core
 
-# 2. Start all services (PostGIS, Redis, MinIO, FastAPI Backend, Next.js Web)
+# 2. Start all services (PostGIS, Redis, FastAPI Backend, Next.js Web)
 docker compose up -d
 
 # 3. Check running services
 docker compose ps
 ```
 
-| Service | Local URL | Port | Health Status |
+### Service Endpoints & Network Access
+
+> [!IMPORTANT]
+> **Web Browser vs. Database/Cache Protocols**:
+> - Only **Port 3000** (Web Portal) and **Port 8000** (FastAPI / Swagger) are HTTP web servers accessible directly via your web browser.
+> - **Port 5432** (PostgreSQL/PostGIS) and **Port 6379** (Redis) are raw TCP database/cache network sockets. Opening `http://localhost:5432` or `http://localhost:6379` in a web browser will intentionally return a connection reset or empty response because they communicate using binary database protocols (`psql`/`redis-cli`), not HTTP.
+
+#### 🌐 Web Browser Interfaces (Open in Web Browser)
+| Application Interface | Browser URL | Port | Health Status / Description |
 | :--- | :--- | :---: | :--- |
-| **Web Portal** | `http://localhost:3000` | 3000 | Ready (`200 OK`) |
-| **FastAPI Backend** | `http://localhost:8000/docs` | 8000 | Ready (`/health`) |
-| **PostgreSQL + PostGIS** | `localhost:5432` | 5432 | Port Open (`EPSG:4326`) |
-| **Redis Cache** | `localhost:6379` | 6379 | Running |
+| **CivicLens Web Portal** | [`http://localhost:3000`](http://localhost:3000) | `3000` | Ready (`200 OK`) · Citizen, Officer &amp; Admin UI |
+| **Interactive API Docs (Swagger)** | [`http://localhost:8000/docs`](http://localhost:8000/docs) | `8000` | Interactive OpenAPI schema &amp; endpoint testing |
+| **Alternative API Docs (ReDoc)** | [`http://localhost:8000/redoc`](http://localhost:8000/redoc) | `8000` | Formatted technical API documentation |
+| **Backend Health Probe** | [`http://localhost:8000/health`](http://localhost:8000/health) | `8000` | Operational status: `{"status": "ok"}` |
+
+#### 🗄️ Backend Data Services (Internal TCP Sockets — Not Web Pages)
+| Service | Protocol &amp; Socket | Port | Access Tool / Connection String |
+| :--- | :--- | :---: | :--- |
+| **PostgreSQL 16 + PostGIS 3.4** | TCP / PostgreSQL Wire | `5432` | `postgresql://postgres:postgres@localhost:5432/civiclens` (DBeaver, TablePlus, `psql`) |
+| **Redis 7 In-Memory Cache** | TCP / Redis RESP | `6379` | `redis://localhost:6379/0` (`redis-cli -h localhost -p 6379`) |
+
+---
+
+## 📂 Project Directory Structure
+
+```
+CivicLens-Core/
+├── .github/                      # CI/CD automation & release workflows
+├── backend/                      # High-performance FastAPI 0.115 backend application
+│   ├── app/
+│   │   ├── api/
+│   │   │   ├── deps.py           # Dependency injection (PostGIS sessions, OAuth2 auth)
+│   │   │   └── v1/               # Versioned REST endpoints
+│   │   │       ├── admin.py          # Admin controls & user dossier management
+│   │   │       ├── analytics.py      # Operations dashboard KPIs & failure curves
+│   │   │       ├── assets.py         # 70+ spatial assets (Wards, Panchayats, Police, Fire)
+│   │   │       ├── audit.py          # PostGIS SHA-256 cryptographic audit trail
+│   │   │       ├── auth.py           # JWT token generation & cookie management
+│   │   │       ├── departments.py    # Municipal department registry (AMC, PWD, DWS, TSECL)
+│   │   │       ├── incidents.py      # Grievance ingestion, 50MB uploads & GPS verification
+│   │   │       ├── inspections.py    # Field quality inspections & condition scoring
+│   │   │       └── work_orders.py    # Contractor squad assignment & SLA status
+│   │   ├── core/                 # Configuration, security tokens, rate limiting, logging
+│   │   ├── db/                   # SQLAlchemy 2.0 engine & PostGIS connection pool
+│   │   ├── models/               # Database ORM models (Spatial geometry tables)
+│   │   ├── schemas/              # Pydantic v2 validation contracts
+│   │   ├── services/             # Incident state machines & triage workflows
+│   │   └── main.py               # FastAPI application factory & CORS middleware
+│   ├── tests/                    # Pytest verification suite (Health, Auth, Workflows)
+│   ├── Dockerfile                # Multi-stage Python 3.12 container
+│   └── requirements.txt          # Python dependencies
+├── frontend/                     # Next.js 15.5 App Router web client
+│   ├── app/
+│   │   ├── admin/                # Admin Command & Control + Employee Dossier & Dismissal
+│   │   ├── ai/                   # Predictive Risk, Computer Vision, NLP & What-If Simulator
+│   │   ├── assets/               # 70+ Tripura Infrastructure Assets (Wards 50, Panchayats)
+│   │   ├── dashboard/            # Executive Operations Dashboard (KPIs & Risk Map)
+│   │   ├── incidents/            # Public & field grievance desk
+│   │   ├── inspections/          # Field quality audits & structural condition scoring
+│   │   ├── login/                # Dual citizen OTP tracker & 1-click officer command login
+│   │   ├── map/                  # Interactive Leaflet GIS spatial heatmap
+│   │   ├── report/               # Public grievance submission (50MB photo + GPS capture)
+│   │   ├── work-orders/          # Municipal execution work tickets & contractor squads
+│   │   ├── layout.tsx            # Root application layout & typography
+│   │   ├── page.tsx              # Unified landing portal (Dual Modern / Govt View)
+│   │   └── globals.css           # Tailwind styling & UX4G / GIGW 3.0 accessibility tokens
+│   ├── components/               # Reusable UI widgets, header, footer, policy reader modals
+│   ├── lib/                      # TypeScript definitions, Tripura seed datasets, API client
+│   ├── middleware.ts             # Next.js edge route protection & deep-linking intent handler
+│   ├── Dockerfile                # Multi-stage Node.js 22 container
+│   └── package.json              # Web client dependencies & build scripts
+├── docker-compose.yml            # Multi-container orchestration (Web, Backend, PostGIS, Redis)
+├── README.md                     # Comprehensive platform manual & architectural guide
+├── AGENTS.md                     # Persistent AI agent runbook & constraints
+├── CLAUDE.md                     # Anthropic Claude Code operational context
+├── DESIGN.md                     # Machine-readable UX4G/GIGW 3.0 design system specifications
+├── ARCHITECTURE.md               # System diagrams & microservice hierarchies
+├── PLAN.md                       # Immediate roadmap & engineering objectives
+├── BACKLOG.md                    # Prioritized feature pipeline & non-goals
+├── CONTRIBUTING.md                # Standard operating guidelines for code contributions
+├── CHANGELOG.md                  # Chronological record of updates & releases
+├── LICENSE.md                    # Apache 2.0 open-source license
+└── SECURITY.md                   # Security vulnerability reporting & disclosure guidelines
 
 ---
 

@@ -59,7 +59,7 @@ flowchart LR
 ```
 
 ### Core Innovations:
-1. **95+ Tripura Infrastructure Assets**: Spans all 8 districts (*West Tripura, Sepahijala, Khowai, Gomati, South Tripura, Dhalai, Unakoti, North Tripura*), including **Railway Stations & Junctions** (AGTL, Sabroom, Udaipur, Dharmanagar), **Inter-state Rail Corridors**, **Mountain Tunnels** (Longtharai, Atharamura, Baramura), **Major Bridges** (Maitri Setu, Howrah 4-Lane, Manu, Gumti), **Principal Rivers** (Gumti, Howrah, Manu, Khowai, Feni), tourist destinations, expressways, municipal wards, **8 rural Gram Panchayats**, drainage sluices, lakes, power plants, police stations, and fire brigade stations.
+1. **96+ Tripura Infrastructure Assets**: Spans all 8 districts (*West Tripura, Sepahijala, Khowai, Gomati, South Tripura, Dhalai, Unakoti, North Tripura*), including **Railway Stations & Junctions** (AGTL, Sabroom, Udaipur, Dharmanagar), **Inter-state Rail Corridors**, **Mountain Tunnels** (Longtharai, Atharamura, Baramura), **Major Bridges** (Maitri Setu, Howrah 4-Lane, Manu, Gumti), **Principal Rivers** (Gumti, Howrah, Manu, Khowai, Feni), tourist destinations, expressways, municipal wards, **8 rural Gram Panchayats**, drainage sluices, lakes, power plants, police stations, and fire brigade stations.
 2. **Interactive Computer Vision Defect Classifier**:
    - Field camera snap / custom image upload with dynamic laser scan animation.
    - 4 high-definition realistic vector defect presets (Pothole, Structural Crack, Drainage Scour, Electrical Hazard).
@@ -67,8 +67,9 @@ flowchart LR
    - Cryptographically signed AI Inspection Certificate export with verifiable SHA-256 hash.
 3. **90-Day Predictive Failure Curve**: Multi-variate degradation forecasting weighing age, monsoon rainfall saturation, freight volume, and inspection history.
 4. **Duplicate Grievance Clustering**: Automatically aggregates multiple citizen complaints for the same physical issue within $50\text{ m}$ into a single unified master work order.
-5. **Superadmin Personnel Dossier & Access Management**: Complete officer profiles with authentic Indian portraits, employee codes, designation, contact numbers, gender, marital status, and a "Revoke Credentials & Dismiss" action with simulated automated NIC email notice dispatch.
+5. **Role-Based Admin Access (RBAC) & Personnel Dossier**: Scoped data visibility across Super Admin (statewide), PWD Engineer (roads & bridges), and DWS Inspector (water grid), complete with authentic officer profiles, employee codes, designation, and an exclusive executive dismissal workflow for Super Admin.
 6. **Dual-View UI Engine**: Instant one-click toggle between **Cyber-Modern View** and **Indian Government (UX4G / GIGW 3.0) View** with WCAG 2.1 AA accessible contrast.
+7. **Trilingual Redressal & Universal Multi-Device Support**: Citizen grievance submission rendered with multilingual support (English, বাংলা, हिन्दी) across Mobile, Tablet, Laptop, Desktop, and TV.
 
 ---
 
@@ -165,7 +166,7 @@ CivicLens includes built-in geospatial data covering all 8 districts of Tripura:
 | **Major Bridges** | **Maitri Setu (1.9 km Feni River), Howrah River Battala 4-Lane, Manu River NH-8, Gumti River, Khowai River** | 5 | Pre-stressed concrete spans, international links, pier scour aprons |
 | **Principal Rivers** | **Gumti (Gomati), Howrah (Saidra), Manu (167 km), Khowai, Feni, Dhalai, Juri, Muhuri** | 8 | Hydrological basin telemetry, flood sluice networks, river embankments |
 | **Named Expressways** | MBB Airport Expressway, VIP Road, Melaghar Highway, Baramura Pass | 10 | Bitumen pavement telemetry, culverts, bridge approaches |
-| **Municipal Wards** | AMC Ward 1, 2, 7, 12, 18, 25, 31, Ward 50 (Khayerpur Extension) | 11 | Urban jurisdiction boundaries, ward sanitation, DWS pipelines |
+| **Municipal Wards** | AMC Municipal Wards (Agartala Municipal Corporation Wards 1 to 49, Central & Extension Wards) | 11 | Urban jurisdiction boundaries, ward sanitation, DWS pipelines |
 | **Gram Panchayats** | **Lembucherra, Matabari, Madhupur, Bagbassa, Rajnagar, Halahali, Padmabil, Fatikroy** | 8 | Rural civic centers, village piped water, cyclone shelters |
 | **Drainage Canals** | Howrah Outfall Canal, Battala High-Capacity Pumps, Akhaura Canal | 5 | Sluice gates, stormwater runoff telemetry, flood basins |
 | **Lakes & Waterways** | Rudrasagar Lake, Jagannath Dighi, Amar Sagar, Kalyan Sagar | 5 | Embankment stability, tourist piers, water level monitoring |
@@ -176,17 +177,27 @@ CivicLens includes built-in geospatial data covering all 8 districts of Tripura:
 
 ---
 
-## 👥 Human Resources & Personnel Dossier
+## 👥 Human Resources, Personnel Dossier & Role-Based Access Control (RBAC)
 
-The `/admin` command center provides enterprise personnel oversight:
+The `/admin` command center provides enterprise personnel oversight with strictly calibrated **Role-Based Access Control (RBAC)**:
 
+### Administrative Persona Scoping
+| Persona | Designation & Directorate | Scoped Data & Visibility | HR & Dismissal Authority |
+| :--- | :--- | :--- | :--- |
+| **👑 Super Admin** (`admin@civiclens.local`) | Chief Operations Officer & State Director, Directorate of Urban Development | **Unrestricted Statewide Oversight**: All **96 assets** across all 8 districts, all 5 municipal departments, all operational work orders, full tamper-evident audit ledger | **All 22 personnel dossiers**. Retains exclusive constitutional authority to **Revoke Commissions & Dismiss (Fire)** officers with automated cryptographic email notice dispatch. |
+| **🏗️ PWD Engineer** (`pwd.officer@tripura.gov.in`) | Executive Engineer (Roads & Bridges), Public Works Department | **Departmentally Scoped**: 26 PWD road/bridge infrastructure assets, active road repair work orders, civil engineering maintenance logs | Filtered strictly to **4 PWD engineers & officers**. Dismissal action is locked (`🔒 Super Admin clearance required`). |
+| **💧 DWS Inspector** (`dws.inspector@tripura.gov.in`) | Senior Water Works Field Inspector, Drinking Water & Sanitation Directorate | **Departmentally Scoped**: 18 DWS water treatment & distribution grid assets, pipeline maintenance tickets, water purity audit logs | Filtered strictly to **3 DWS field inspectors**. Dismissal action is locked (`🔒 Super Admin clearance required`). |
+
+### Key Administrative Capabilities:
+- **Interactive Persona Switcher**: Seamlessly switch between `👑 Super Admin`, `🏗️ PWD Engineer`, and `💧 DWS Inspector` directly within the `/admin` header to test and evaluate data scoping in real-time.
 - **Official Identity Cards**: Displays officer photo, designation, government employee ID (e.g. `TR-PWD-2023-042`), station posting, and security clearance.
-- **Demographics**: Tracks officer **Gender** (*Male / Female*) and **Marital Status** (*Married, Single, Widow, Divorced*).
-- **Communication Channels**: Official registered government email and mobile contact numbers displayed with high-contrast accessibility.
+- **Demographics & Profile**: Tracks officer **Gender** (*Male / Female*), **Marital Status** (*Married, Single, Widow, Divorced*), joined date, and activity status.
+- **Official Contact Channels**: Official government email and mobile contact numbers rendered with high-contrast accessibility tokens.
 - **Revoke & Dismiss (Fire) Workflow**:
-  - Requires executive confirmation.
+  - Unlocked exclusively for **Super Admin**.
+  - Requires explicit executive confirmation dialog.
   - Updates personnel status to `Relieved / Revoked`.
-  - Dispatches a simulated official termination transmission notice to the officer's registered email with a cryptographic revocation token (`TR-REV-NIC-XXXXXXX`).
+  - Dispatches simulated official termination transmission notice to the officer's email with a verifiable cryptographic revocation token (`TR-REV-NIC-XXXXXXX`).
   - Stamped into the tamper-evident PostGIS audit log with immutable timestamps.
 
 ---
@@ -267,7 +278,7 @@ CivicLens-Core/
 │   ├── app/
 │   │   ├── admin/                # Admin Command & Control + Employee Dossier & Dismissal
 │   │   ├── ai/                   # Predictive Risk, Computer Vision, NLP & What-If Simulator
-│   │   ├── assets/               # 70+ Tripura Infrastructure Assets (Wards 50, Panchayats)
+│   │   ├── assets/               # 96+ Tripura Infrastructure Assets (Municipal Wards, Panchayats, Railways, Bridges, Rivers)
 │   │   ├── dashboard/            # Executive Operations Dashboard (KPIs & Risk Map)
 │   │   ├── incidents/            # Public & field grievance desk
 │   │   ├── inspections/          # Field quality audits & structural condition scoring

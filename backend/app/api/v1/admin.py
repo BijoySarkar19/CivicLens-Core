@@ -7,7 +7,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
 
-from app.api.deps import CurrentUser, DatabaseSession, require_roles
+from app.api.deps import DatabaseSession, require_roles
 from app.models.models import User, UserRole
 from sqlalchemy import select
 
@@ -52,7 +52,7 @@ def list_users(
 def admin_stats(db: DatabaseSession, admin: AdminUser):
     """System statistics. Admin only."""
     from sqlalchemy import func
-    from app.models.models import Asset, Incident, WorkOrder, Inspection, AuditLog
+    from app.models.models import AuditLog
 
     return {
         "users": db.scalar(select(func.count(User.id))) or 0,

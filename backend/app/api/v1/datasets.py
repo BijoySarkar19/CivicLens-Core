@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from sqlalchemy import select
 
 from app.api.deps import CurrentUser, DatabaseSession, require_roles
@@ -26,5 +26,7 @@ def create_source(
     current_user: User = Depends(require_roles("super_admin", "data_administrator")),
 ):
     source = DatasetSource(**payload.model_dump())
-    db.add(source); db.commit(); db.refresh(source)
+    db.add(source)
+    db.commit()
+    db.refresh(source)
     return {"id": source.id, "dataset_name": source.dataset_name, "status": source.status}

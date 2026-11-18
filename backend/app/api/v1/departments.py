@@ -23,5 +23,7 @@ def create_department(
     if db.scalar(select(Department).where(Department.code == payload.code)):
         raise HTTPException(status_code=409, detail="Department code already exists")
     item = Department(code=payload.code, name=payload.name, description=payload.description)
-    db.add(item); db.commit(); db.refresh(item)
+    db.add(item)
+    db.commit()
+    db.refresh(item)
     return {"id": item.id, "code": item.code, "name": item.name}

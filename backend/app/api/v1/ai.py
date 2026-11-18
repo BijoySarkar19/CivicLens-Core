@@ -1,8 +1,7 @@
 """CivicLens AI — Semester 2 Decision Layer & Intelligent Predictive Operations."""
 
 from datetime import datetime, timezone
-from typing import Any
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
 from app.core.config import settings

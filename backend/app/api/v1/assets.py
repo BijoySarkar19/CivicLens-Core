@@ -2,7 +2,6 @@ from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy import select
-from sqlalchemy.orm import Session
 
 from app.api.deps import CurrentUser, DatabaseSession, require_roles
 from app.models.models import Asset, User

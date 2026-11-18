@@ -26,4 +26,10 @@ Strict engineering guidelines and invariant rules that must never be broken by c
 - **ALWAYS** supply an immediate, graceful fallback to the local Tripura seed datasets (`TRIPURA_SEED_ASSETS`, `DEMO_ADMIN_USERS`, `DEMO_INCIDENTS`, `DEMO_WORK_ORDERS`).
 
 ## 6. Contrast & Accessibility Rule
-- **ALWAYS** ensure that in Government Mode (`isGovt`), unselected buttons, labels, and text render with high contrast (`#0f172a` or `#334155`), clean slate borders, and readable backgrounds. Never render light gray or white text over light gray backgrounds.
+- **ALWAYS** ensure that in Government Mode (`isGovt`), unselected buttons, labels, and text render with high contrast (`#0f172a` or `#334155`), clean slate borders, and readable backgrounds. Never render light yellow or white text over light backgrounds.
+
+## 7. Deep-Link Back Navigation Rule
+- **ALWAYS** supply accessible Back buttons (`Back to Command Center` / `Back to Dossier`) on sub-pages navigated from administrative dossiers (`/map`, `/assets`) so the officer can return to their active review queue without friction.
+
+## 8. Clean Optional Contact Field Rule
+- **NEVER** display hardcoded or placeholder phone numbers when a citizen leaves optional contact information blank. Render `"No phone provided"` or `"Not Provided (Optional)"`.

@@ -41,6 +41,12 @@ This document provides system context, architectural constraints, command specif
    - When communicating with backend endpoints, always implement structured try/catch blocks that fall back to rich Tripura seed datasets (`TRIPURA_SEED_ASSETS`, `DEMO_INCIDENTS`, `DEMO_WORK_ORDERS`, `DEMO_ADMIN_USERS`).
    - Never surface raw red unhandled "Failed to fetch" error banners to the user.
 
+7. **Navigation Integrity & Back Buttons**:
+   - Deep links to `/map` (from administrative grievance dossiers) or `/assets` MUST provide clear, accessible Back buttons (`Back to Command Center` / `Back to Dossier`) returning the user directly without stranding them.
+
+8. **Clean Optional Contact Fields**:
+   - When a citizen does not provide a phone number, never render synthetic fallback numbers. Render `"No phone provided"` or `"Not Provided (Optional)"`.
+
 ---
 
 ## 3. Standard Verification Commands
@@ -87,7 +93,7 @@ CivicLens-Core/
 │   │   ├── page.tsx        # Unified landing portal (Citizens & Officers)
 │   │   ├── admin/          # Admin Command & Control + Employee Dossier & Dismissal
 │   │   ├── ai/             # Predictive Risk, Computer Vision, NLP & What-If
-│   │   ├── assets/         # 60+ Tripura Infrastructure Assets (GIS linked)
+│   │   ├── assets/         # 96+ Tripura Infrastructure Assets (GIS linked)
 │   │   ├── dashboard/      # Executive Operations Dashboard
 │   │   ├── map/            # Interactive Leaflet GIS Spatial Heatmap
 │   │   ├── incidents/      # Public & field grievance reports

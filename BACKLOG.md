@@ -1,20 +1,21 @@
-# BACKLOG.md — CivicLens Feature Backlog & Future Tasks
+# BACKLOG.md — CivicLens AI Feature Backlog & Engineering Roadmap
 
-Prioritized backlog for future iterations of CivicLens Core.
+This document maintains the prioritized backlog of engineering enhancements, integrations, and future capabilities for CivicLens AI.
 
 ---
 
 ## 🟢 Priority 1: Near-Term Enhancements
-- [ ] **Drone Video Ingestion Pipeline**: Support continuous MP4 video stream feeds from aerial surveillance drones over NH-8 and Agartala Bypass.
-- [ ] **Native Mobile Inspection PWA**: Offline-first service worker cache for field inspectors operating in low-connectivity remote hills (Baramura, Jampui Hills).
-- [ ] **SMS Integration via C-DAC Gateway**: Automated bilingual Bengali and English SMS updates sent to citizens upon work order milestone completion.
+- [ ] **Automated WhatsApp Redressal Bot**: Direct webhook integration allowing citizens to report potholes and burst water mains via photo attachment on WhatsApp.
+- [ ] **Bilingual SMS Push Notifications**: Automated English, Bengali, and Kokborok SMS dispatch via C-DAC / NIC mobile gateway upon work order dispatch and resolution milestones.
+- [ ] **Offline PWA Field Client**: Service Worker cache for municipal inspectors operating in remote hilly areas (Longtharai, Jampui Hills, Atharamura) with background sync upon reconnecting.
+- [ ] **Automated PDF Redressal Summary Export**: Citizen certificate export stamped with municipal QR code and verification URL.
 
-## 🟡 Priority 2: Advanced AI & Simulation
-- [ ] **Hydrodynamic Flood Inundation Simulator**: Integrate Digital Elevation Model (DEM) data with Gomati and Howrah River telemetry to simulate 24h waterlevel crests.
-- [ ] **Reinforced Bitumen Longevity Model**: Model the degradation impact of seasonal monsoon rainfall versus heavy freight truck traffic.
-- [ ] **Automated Multi-Vehicle Routing**: TSP (Traveling Salesperson Problem) route optimization for PWD rapid pothole patching squads across Agartala Municipal Corporation wards.
+## 🟡 Priority 2: Geospatial & Hydrodynamic Modeling
+- [ ] **Digital Elevation Model (DEM) Flood Inundation Simulator**: Real-time river basin telemetry integration (Howrah, Gumti, Manu) simulating 24h seasonal monsoon overflow boundaries.
+- [ ] **Drone Video Ingestion Pipeline**: High-resolution video stream processing from aerial drones for rapid surface condition rating across NH-8 and Maitri Setu bypass.
+- [ ] **Dynamic Traffic Signal Preemption**: Integration with Agartala Smart City ITMS to auto-clear traffic signals for emergency ambulances and fire brigade tenders.
 
-## 🔵 Priority 3: Platform & Integration
-- [ ] **Tripura State Portal Single Sign-On (SSO)**: OAuth2 integration with Tripura e-District portal and MeriPehchaan (National Single Sign-On).
-- [ ] **IoT Sensor Edge Gateways**: MQTT stream ingestion from vibration sensors installed on Gomati River Bridge and Maitri Setu.
-- [ ] **Automated GIS GeoJSON Export**: One-click download of all 60+ categorized infrastructure assets for use in QGIS and ArcGIS desktop platforms.
+## 🔵 Priority 3: State & National Platform Integration
+- [ ] **State Portal SSO Integration**: Single Sign-On integration with Tripura e-District portal and MeriPehchaan (National Single Sign-On).
+- [ ] **IoT Bridge Vibration Telemetry**: Continuous vibration and seismic sensor telemetry ingestion from Gomati Bridge and Maitri Setu piers.
+- [ ] **One-Click OpenGIS Export**: Bulk GeoJSON and Shapefile downloads for spatial researchers and municipal planners using QGIS/ArcGIS.

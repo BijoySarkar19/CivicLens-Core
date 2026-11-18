@@ -199,7 +199,7 @@ services:
       [
         "celery",
         "-A",
-        "app.worker.celery_app",
+        "app.worker",
         "worker",
         "--loglevel=info"
       ]

@@ -4,7 +4,7 @@ import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useSearchParams } from "next/navigation";
-import { Boxes, Search, MapPin, TrendingUp, Layers } from "lucide-react";
+import { Boxes, Search, MapPin, TrendingUp, Layers, ArrowLeft } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { Asset, TRIPURA_SEED_ASSETS } from "@/lib/types";
 import { PageShell } from "@/components/page-shell";
@@ -137,6 +137,28 @@ function AssetsPageContent() {
         className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8"
         aria-label="Tripura Infrastructure asset registry"
       >
+        {/* Back Navigation Button */}
+        <div className="mb-4 flex items-center justify-between">
+          <button
+            type="button"
+            onClick={() => {
+              if (typeof window !== "undefined" && window.history.length > 1) {
+                window.history.back();
+              } else {
+                window.location.href = "/admin";
+              }
+            }}
+            className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition shadow-sm ${
+              isGovt
+                ? "bg-white border border-slate-300 text-slate-800 hover:bg-slate-100 shadow-slate-200/50"
+                : "bg-white/10 border border-white/10 text-white hover:bg-white/20"
+            }`}
+            title="Return to the previous screen or Admin Command Center"
+          >
+            <ArrowLeft size={14} /> Back to Command Center
+          </button>
+        </div>
+
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end justify-between">
           <div>
@@ -164,25 +186,40 @@ function AssetsPageContent() {
         </div>
 
         {rawAssetId && (
-          <div className={`mt-4 rounded-xl border p-3.5 flex items-center justify-between text-xs font-bold ${
+          <div className={`mt-4 rounded-xl border p-3.5 flex flex-wrap items-center justify-between gap-3 text-xs font-bold ${
             isGovt ? "border-blue-300 bg-blue-50 text-blue-900" : "border-cyan-400/40 bg-cyan-400/10 text-cyan-200"
           }`}>
             <span className="flex items-center gap-2">
               <span className="flex h-2.5 w-2.5 rounded-full bg-cyan-400 animate-ping" />
               Focusing Specific Infrastructure Asset: <strong>{query || `Asset ID #${rawAssetId}`}</strong>
             </span>
-            <button
-              type="button"
-              onClick={() => {
-                setQuery("");
-                setDistrictFilter("All Districts");
-              }}
-              className={`rounded-lg px-2.5 py-1 text-[11px] font-bold border transition ${
-                isGovt ? "border-blue-300 bg-white text-blue-800" : "border-cyan-400/30 bg-cyan-400/20 text-cyan-200"
-              }`}
-            >
-              Clear Filter
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setQuery("");
+                  setDistrictFilter("All Districts");
+                }}
+                className={`rounded-lg px-2.5 py-1 text-[11px] font-bold border transition ${
+                  isGovt ? "border-blue-300 bg-white text-blue-800" : "border-cyan-400/30 bg-cyan-400/20 text-cyan-200"
+                }`}
+              >
+                Clear Filter
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (typeof window !== "undefined" && window.history.length > 1) {
+                    window.history.back();
+                  } else {
+                    window.location.href = "/admin";
+                  }
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-400 text-slate-950 hover:bg-cyan-300 text-xs font-black transition"
+              >
+                <ArrowLeft size={13} /> Back to Dossier
+              </button>
+            </div>
           </div>
         )}
 

@@ -1,6 +1,6 @@
-# DESIGN.md — CivicLens Design System & Design Tokens
+# DESIGN.md — CivicLens AI Design System & Tokens
 
-Machine-readable design specification for CivicLens Core, standardizing layout rules, color roles, typography, component tokens, and dual-mode rendering (UX4G / GIGW 3.0 vs. Modern Dark Mode).
+Machine-readable design specification for CivicLens AI, standardizing layout rules, color roles, typography, component tokens, and dual-mode rendering (UX4G / GIGW 3.0 vs. Modern Dark Mode).
 
 ---
 
@@ -61,9 +61,17 @@ CivicLens supports two synchronized design modes toggled via `useGovtMode()`:
 ### 2. GIS Map Markers
 - Interactive Leaflet circles and pulsing radar rings.
 - Dynamic color coding by condition: Good (Green), Fair (Yellow), Poor (Red).
-- Focused markers flash with red highlighted perimeter when navigated from Asset directory.
+- Focused markers automatically zoom to `zoom=16` with auto-opening popup.
 
 ### 3. Accessible Form Controls
 - Explicit labels with `htmlFor` bindings.
 - Distinct focus states with 2px ring offset.
 - Mobile touch targets minimum 44px by 44px.
+
+### 4. Centered Severity & Target Badges
+- Pill styling uses `inline-flex flex-col items-center justify-center text-center min-w-[76px]`.
+- Vertical line separation ensures severity code (`Critical`) and priority tier (`(P1)`) are horizontally aligned over each other.
+- Target indicator badges (`★ TARGET`) center the glyph over the label without circular distortion.
+
+### 5. Deep-Link Back Buttons
+- Sub-views navigated from administrative dossiers (`/map` and `/assets`) feature prominent, accessible Back buttons returning to the dossier or command center without stranding users.

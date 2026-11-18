@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { MapPinned, Layers, Info, MapPin } from "lucide-react";
+import { MapPinned, Layers, Info, MapPin, ArrowLeft } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { Asset, TRIPURA_SEED_ASSETS } from "@/lib/types";
 import { PageShell } from "@/components/page-shell";
@@ -73,6 +73,28 @@ function MapPageContent() {
         className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8"
         aria-label="Tripura GIS infrastructure map"
       >
+        {/* Back Navigation Button */}
+        <div className="mb-4 flex items-center justify-between">
+          <button
+            type="button"
+            onClick={() => {
+              if (typeof window !== "undefined" && window.history.length > 1) {
+                window.history.back();
+              } else {
+                window.location.href = "/admin";
+              }
+            }}
+            className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition shadow-sm ${
+              isGovt
+                ? "bg-white border border-slate-300 text-slate-800 hover:bg-slate-100 shadow-slate-200/50"
+                : "bg-white/10 border border-white/10 text-white hover:bg-white/20"
+            }`}
+            title="Return to the previous screen or Admin Command Center"
+          >
+            <ArrowLeft size={14} /> Back to Command Center
+          </button>
+        </div>
+
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end justify-between">
           <div className="flex items-center gap-3">
             <MapPinned className={accent} size={24} aria-hidden="true" />
@@ -117,30 +139,60 @@ function MapPageContent() {
         </div>
 
         {focusedAsset && (
-          <div className={`mt-4 rounded-xl border p-3.5 flex items-center justify-between text-xs font-bold ${
+          <div className={`mt-4 rounded-xl border p-3.5 flex flex-wrap items-center justify-between gap-3 text-xs font-bold ${
             isGovt ? "border-blue-300 bg-blue-50 text-blue-900" : "border-cyan-400/30 bg-cyan-400/10 text-cyan-200"
           }`}>
             <span className="flex items-center gap-2">
               <span className="flex h-2.5 w-2.5 rounded-full bg-red-500 animate-ping" />
               Focusing Asset: <strong>{focusedAsset.name}</strong> ({focusedAsset.asset_code}) · {focusedAsset.district}
             </span>
-            <span className="badge font-mono text-[10px] bg-red-500 text-white border-0 font-black">
-              LAT {focusedAsset.latitude?.toFixed(4)}, LNG {focusedAsset.longitude?.toFixed(4)}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="badge font-mono text-[10px] bg-red-500 text-white border-0 font-black">
+                LAT {focusedAsset.latitude?.toFixed(4)}, LNG {focusedAsset.longitude?.toFixed(4)}
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  if (typeof window !== "undefined" && window.history.length > 1) {
+                    window.history.back();
+                  } else {
+                    window.location.href = "/admin";
+                  }
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-400 text-slate-950 hover:bg-cyan-300 text-xs font-black transition"
+              >
+                <ArrowLeft size={13} /> Back to Dossier
+              </button>
+            </div>
           </div>
         )}
 
         {targetLocation && (
-          <div className={`mt-4 rounded-xl border p-3.5 flex items-center justify-between text-xs font-bold ${
+          <div className={`mt-4 rounded-xl border p-3.5 flex flex-wrap items-center justify-between gap-3 text-xs font-bold ${
             isGovt ? "border-amber-400 bg-amber-50 text-amber-950" : "border-cyan-400/40 bg-cyan-400/10 text-cyan-200"
           }`}>
             <span className="flex items-center gap-2">
               <span className="flex h-2.5 w-2.5 rounded-full bg-cyan-400 animate-ping" />
               Focusing Targeted Coordinate: <strong>{targetLocation.title || "Target Coordinate"}</strong>
             </span>
-            <span className="badge font-mono text-[10px] bg-cyan-500 text-slate-950 border-0 font-black">
-              LAT {targetLocation.lat.toFixed(4)}, LNG {targetLocation.lng.toFixed(4)} (Zoom {targetLocation.zoom || 16})
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="badge font-mono text-[10px] bg-cyan-500 text-slate-950 border-0 font-black">
+                LAT {targetLocation.lat.toFixed(4)}, LNG {targetLocation.lng.toFixed(4)} (Zoom {targetLocation.zoom || 16})
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  if (typeof window !== "undefined" && window.history.length > 1) {
+                    window.history.back();
+                  } else {
+                    window.location.href = "/admin";
+                  }
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-400 text-slate-950 hover:bg-cyan-300 text-xs font-black transition"
+              >
+                <ArrowLeft size={13} /> Back to Dossier
+              </button>
+            </div>
           </div>
         )}
 

@@ -1,63 +1,68 @@
-# CivicLens Core — Windows Setup
+# SETUP_WINDOWS.md — CivicLens AI Windows 10/11 Setup Guide
 
-## Requirements
+Comprehensive setup instructions for running CivicLens AI natively or via Docker Desktop on Microsoft Windows.
 
-- Windows 10/11
-- Docker Desktop
-- VS Code
-- Python 3.12 for local backend development
-- Node.js 22 for local frontend development
+---
 
-## 1. Clone/open the project
+## 1. System Requirements
+- **OS**: Windows 10 (Build 19041+) or Windows 11 64-bit.
+- **Docker**: Docker Desktop with WSL 2 backend enabled.
+- **Development Tools**: PowerShell 7+ or Windows PowerShell 5.1, Git for Windows, VS Code.
+- **Optional Local Runtimes**: Python 3.12 64-bit and Node.js 22 LTS (for bare-metal development).
+
+---
+
+## 2. One-Command Setup (Docker Desktop Recommended)
 
 ```powershell
-cd C:\Users\YOUR_NAME\Desktop
-git clone <YOUR_REPOSITORY_URL> CivicLens-Core
+# 1. Open PowerShell and navigate to your workspace
+cd C:\Users\YOUR_USERNAME\Desktop
+
+# 2. Clone the repository
+git clone https://github.com/BijoySarkar19/CivicLens-Core.git
 cd CivicLens-Core
-```
 
-## 2. Create the environment file
-
-```powershell
+# 3. Create local environment configuration
 Copy-Item .env.example .env
+
+# 4. Launch all containerized services (PostGIS, Redis, Backend, Frontend)
+docker compose up -d --build
 ```
 
-Edit `.env` and set a strong `SECRET_KEY` and local development passwords.
+### Accessing Running Services
+| Service | Browser URL | Port |
+| :--- | :--- | :---: |
+| **CivicLens Web Portal** | [http://localhost:3000](http://localhost:3000) | `3000` |
+| **FastAPI Swagger API** | [http://localhost:8000/docs](http://localhost:8000/docs) | `8000` |
+| **MinIO Storage Console** | [http://localhost:9001](http://localhost:9001) | `9001` |
+| **Backend Health Probe** | [http://localhost:8000/health](http://localhost:8000/health) | `8000` |
 
-## 3. Start the full stack
+---
 
+## 3. Native Windows Local Development (Optional)
+
+### Backend (Python 3.12)
 ```powershell
-docker compose up --build
+# Create and activate virtual environment
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+
+# Install requirements
+pip install -r backend/requirements.txt
+
+# Run migrations & start Uvicorn
+$env:PYTHONPATH="backend"
+python -m uvicorn app.main:app --app-dir backend --host 0.0.0.0 --port 8000 --reload
 ```
 
-Open:
-
-- Frontend: http://localhost:3000
-- API: http://localhost:8000
-- Swagger: http://localhost:8000/docs
-- MinIO Console: http://localhost:9001
-
-## 4. Development administrator
-
-The backend creates the administrator from:
-
-```text
-ADMIN_EMAIL
-ADMIN_PASSWORD
-```
-
-Never commit `.env`.
-
-## 5. Stop
-
+### Frontend (Next.js 15)
 ```powershell
-docker compose down
+cd frontend
+npm install
+npm run dev -- -p 3000
 ```
 
-To also remove development database/storage volumes:
+---
 
-```powershell
-docker compose down -v
-```
-
-Use `down -v` only when you intentionally want to delete local database data.
+## 4. Troubleshooting Windows Port Resets
+- If opening `localhost:5432` or `localhost:6379` in a browser returns an error, this is expected: PostgreSQL and Redis are binary TCP sockets, not HTTP web pages. Connect to them using DBeaver or `psql`.

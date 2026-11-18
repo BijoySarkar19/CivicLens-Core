@@ -1,4 +1,4 @@
-# SUPPORT.md — CivicLens Technical Support & Incident Escalation
+# SUPPORT.md — CivicLens AI Technical Support & Incident Escalation
 
 Official operational support guide for civic authorities, participating departments, and developers.
 
@@ -6,9 +6,9 @@ Official operational support guide for civic authorities, participating departme
 
 ## 1. Issue Reporting & Support Channels
 
-- **Public Redressal & Bug Reports**: Submit an issue via GitHub Issues at `https://github.com/BijoySarkar19/CivicLens-Core/issues`.
+- **Public Redressal & Bug Reports**: Submit an issue via GitHub Issues at [https://github.com/BijoySarkar19/CivicLens-Core/issues](https://github.com/BijoySarkar19/CivicLens-Core/issues).
 - **Administrative Operations Helpline**: Directorate of Urban Development, Agartala, Tripura (`support@civiclens.local`).
-- **Emergency Municipal Escalation**: Agartala Municipal Corporation Integrated Command & Control Center (ICCC), Lichubagan (`+91 381-232-XXXX`).
+- **Emergency Municipal Escalation**: Agartala Municipal Corporation Integrated Command & Control Center (ICCC), Lichubagan.
 
 ---
 

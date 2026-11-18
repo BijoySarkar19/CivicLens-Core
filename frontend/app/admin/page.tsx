@@ -2221,16 +2221,16 @@ export default function AdminPage() {
                 {/* Footer Controls with deep zoom map navigation & asset targeting */}
                 {(() => {
                   const mapUrl = selectedIncident.asset_id
-                    ? `/map?assetId=${selectedIncident.asset_id}&zoom=16`
+                    ? `/map?assetId=${selectedIncident.asset_id}&zoom=16&from=admin`
                     : selectedIncident.latitude && selectedIncident.longitude
-                    ? `/map?lat=${selectedIncident.latitude}&lng=${selectedIncident.longitude}&zoom=16&focus=${encodeURIComponent(selectedIncident.title)}`
+                    ? `/map?lat=${selectedIncident.latitude}&lng=${selectedIncident.longitude}&zoom=16&focus=${encodeURIComponent(selectedIncident.title)}&from=admin`
                     : selectedIncident.district && DISTRICT_COORDS[selectedIncident.district]
-                    ? `/map?lat=${DISTRICT_COORDS[selectedIncident.district][0]}&lng=${DISTRICT_COORDS[selectedIncident.district][1]}&zoom=16&district=${encodeURIComponent(selectedIncident.district)}&focus=${encodeURIComponent(selectedIncident.title)}`
-                    : `/map?zoom=16`;
+                    ? `/map?lat=${DISTRICT_COORDS[selectedIncident.district][0]}&lng=${DISTRICT_COORDS[selectedIncident.district][1]}&zoom=16&district=${encodeURIComponent(selectedIncident.district)}&focus=${encodeURIComponent(selectedIncident.title)}&from=admin`
+                    : `/map?zoom=16&from=admin`;
 
                   const assetsUrl = selectedIncident.asset_id
-                    ? `/assets?assetId=${selectedIncident.asset_id}`
-                    : `/assets?search=${encodeURIComponent(selectedIncident.category || "")}&district=${encodeURIComponent(selectedIncident.district || "All Districts")}`;
+                    ? `/assets?assetId=${selectedIncident.asset_id}&from=admin`
+                    : `/assets?search=${encodeURIComponent(selectedIncident.category || "")}&district=${encodeURIComponent(selectedIncident.district || "All Districts")}&from=admin`;
 
                   return (
                     <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-4">

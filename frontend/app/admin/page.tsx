@@ -48,12 +48,65 @@ import {
   DEMO_ADMIN_DEPTS,
   DEMO_ADMIN_AUDIT,
   DEMO_SYSTEM_METRICS,
+  DEMO_INCIDENTS,
+  Incident,
 } from "@/lib/types";
 import { PageShell } from "@/components/page-shell";
 import { StatCard } from "@/components/stat-card";
 import { useGovtMode } from "@/lib/govt-mode";
 
-type AdminTab = "overview" | "users" | "departments" | "audit" | "system";
+type AdminTab = "overview" | "incidents" | "users" | "departments" | "audit" | "system";
+
+const INCIDENT_STATUS_META: Record<string, { label: string; color: string; govtColor: string }> = {
+  reported: {
+    label: "Reported",
+    color: "bg-blue-500/20 text-blue-300 border-blue-500/40",
+    govtColor: "bg-blue-100 text-blue-800 border-blue-300",
+  },
+  under_review: {
+    label: "Under Review",
+    color: "bg-purple-500/20 text-purple-300 border-purple-500/40",
+    govtColor: "bg-purple-100 text-purple-800 border-purple-300",
+  },
+  work_assigned: {
+    label: "Work Assigned",
+    color: "bg-amber-500/20 text-amber-300 border-amber-500/40",
+    govtColor: "bg-amber-100 text-amber-800 border-amber-300",
+  },
+  in_progress: {
+    label: "In Progress",
+    color: "bg-cyan-500/20 text-cyan-300 border-cyan-500/40",
+    govtColor: "bg-cyan-100 text-cyan-800 border-cyan-300",
+  },
+  resolved: {
+    label: "Resolved",
+    color: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+    govtColor: "bg-emerald-100 text-emerald-800 border-emerald-300",
+  },
+};
+
+const SEVERITY_META: Record<string, { label: string; color: string; govtColor: string }> = {
+  critical: {
+    label: "Critical (P1)",
+    color: "bg-red-500/20 text-red-300 border-red-500/40",
+    govtColor: "bg-red-100 text-red-800 border-red-300",
+  },
+  high: {
+    label: "High (P2)",
+    color: "bg-orange-500/20 text-orange-300 border-orange-500/40",
+    govtColor: "bg-orange-100 text-orange-800 border-orange-300",
+  },
+  medium: {
+    label: "Medium (P3)",
+    color: "bg-yellow-500/20 text-yellow-300 border-yellow-500/40",
+    govtColor: "bg-yellow-100 text-yellow-800 border-yellow-300",
+  },
+  low: {
+    label: "Low (P4)",
+    color: "bg-slate-500/20 text-slate-300 border-slate-500/40",
+    govtColor: "bg-gray-100 text-gray-800 border-gray-300",
+  },
+};
 
 const ROLE_LABELS: Record<string, { label: string; color: string }> = {
   super_admin: { label: "Super Admin", color: "text-amber-300 border-amber-400/30 bg-amber-400/10" },
@@ -71,10 +124,16 @@ export default function AdminPage() {
   const [users, setUsers] = useState(DEMO_ADMIN_USERS);
   const [audit, setAudit] = useState(DEMO_ADMIN_AUDIT);
   const [depts, setDepts] = useState(DEMO_ADMIN_DEPTS);
+  const [incidents, setIncidents] = useState<Incident[]>(DEMO_INCIDENTS);
   const [loading, setLoading] = useState(false);
   const [userSearch, setUserSearch] = useState("");
   const [deptSearch, setDeptSearch] = useState("");
   const [auditSearch, setAuditSearch] = useState("");
+  const [incidentSearch, setIncidentSearch] = useState("");
+  const [incidentSeverityFilter, setIncidentSeverityFilter] = useState("all");
+  const [incidentStatusFilter, setIncidentStatusFilter] = useState("all");
+  const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
+  const [incidentActionMessage, setIncidentActionMessage] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
   // Sync active logged-in officer persona
@@ -176,6 +235,110 @@ export default function AdminPage() {
     }
     return true;
   });
+
+  const scopedIncidents = incidents.filter((inc) => {
+    if (activeRole === "super_admin") return true;
+    const text = `${inc.category} ${inc.title} ${inc.description} ${inc.assigned_department ?? ""}`.toLowerCase();
+    if (activeRole === "pwd_engineer") {
+      return (
+        text.includes("road") ||
+        text.includes("pavement") ||
+        text.includes("bridge") ||
+        text.includes("pwd") ||
+        text.includes("asphalt") ||
+        text.includes("drainage")
+      );
+    }
+    if (activeRole === "dws_inspector") {
+      return (
+        text.includes("water") ||
+        text.includes("dws") ||
+        text.includes("drainage") ||
+        text.includes("pipeline") ||
+        text.includes("sanitation") ||
+        text.includes("leak")
+      );
+    }
+    return true;
+  });
+
+  // Load user-submitted complaints from localStorage
+  useEffect(() => {
+    try {
+      const local = localStorage.getItem("cl-user-grievances");
+      if (local) {
+        const parsed = JSON.parse(local);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setIncidents((prev) => {
+            const existingCodes = new Set(prev.map((i) => i.incident_code));
+            const newOnes: Incident[] = parsed
+              .filter((p: any) => p && p.code && !existingCodes.has(p.code))
+              .map((p: any, idx: number) => ({
+                id: 9500 + idx,
+                incident_code: p.code,
+                title: p.title || "Citizen Infrastructure Grievance",
+                description:
+                  p.description ||
+                  `Citizen-filed complaint for ${p.category || "civic infrastructure"} at ${p.landmark || p.city || "Tripura"}.`,
+                category: p.category || "Drainage & Road Pavement",
+                severity: (p.severity as any) || "high",
+                priority: (p.severity === "critical" ? "P1" : p.severity === "high" ? "P2" : "P3") as any,
+                status: (p.status as any) || "reported",
+                reporter_email: p.email || "citizen.redressal@tripura.gov.in",
+                reporter_phone: p.phone || "+91 98621 44520",
+                district: p.district || "West Tripura",
+                city: p.city || "Agartala",
+                landmark: p.landmark || "Ward Corridor",
+                assigned_department:
+                  p.category?.toLowerCase().includes("water") || p.category?.toLowerCase().includes("pipeline")
+                    ? "Drinking Water & Sanitation (DWS)"
+                    : "Public Works Department (PWD)",
+                verified_by: "Pending Field Officer Verification",
+                created_at: p.date || new Date().toISOString(),
+              }));
+            return [...newOnes, ...prev];
+          });
+        }
+      }
+    } catch {}
+  }, []);
+
+  const handleUpdateIncidentStatus = (incidentCode: string, newStatus: string) => {
+    setIncidents((prev) =>
+      prev.map((inc) => (inc.incident_code === incidentCode ? { ...inc, status: newStatus as any } : inc))
+    );
+    if (selectedIncident && selectedIncident.incident_code === incidentCode) {
+      setSelectedIncident((prev) => (prev ? { ...prev, status: newStatus as any } : null));
+    }
+
+    try {
+      const stored = JSON.parse(localStorage.getItem("cl-user-grievances") || "[]");
+      const updated = stored.map((g: any) => (g.code === incidentCode ? { ...g, status: newStatus } : g));
+      localStorage.setItem("cl-user-grievances", JSON.stringify(updated));
+    } catch {}
+
+    const actor =
+      activeRole === "super_admin"
+        ? "Shri Debasish Roy (Super Admin)"
+        : activeRole === "pwd_engineer"
+        ? "Er. Arun Debnath (PWD)"
+        : "Bikash Jamatia (DWS)";
+
+    const auditEntry = {
+      id: Date.now(),
+      actor,
+      action: `GRIEVANCE_STATUS_UPDATE [${newStatus.toUpperCase()}]`,
+      entity: "Incident / Grievance",
+      entity_id: incidentCode,
+      request_id: `req-inc-${Math.random().toString(36).substring(2, 7)}`,
+      details: `Citizen complaint ${incidentCode} status transitioned to '${newStatus.replace("_", " ")}'. Administrative action verified.`,
+      created_at: new Date().toISOString(),
+    };
+    setAudit((prev) => [auditEntry, ...prev]);
+
+    setIncidentActionMessage(`Grievance ${incidentCode} updated to "${newStatus.replace("_", " ").toUpperCase()}" successfully.`);
+    setTimeout(() => setIncidentActionMessage(null), 4000);
+  };
 
   const scopedSummary: DashboardSummary = {
     assets:
@@ -285,11 +448,21 @@ export default function AdminPage() {
       .includes(auditSearch.toLowerCase())
   );
 
+  const filteredIncidents = scopedIncidents.filter((inc) => {
+    const matchesSearch = `${inc.incident_code} ${inc.title} ${inc.description} ${inc.reporter_email ?? ""} ${inc.reporter_phone ?? ""} ${inc.district ?? ""} ${inc.landmark ?? ""}`
+      .toLowerCase()
+      .includes(incidentSearch.toLowerCase());
+    const matchesSeverity = incidentSeverityFilter === "all" || inc.severity === incidentSeverityFilter;
+    const matchesStatus = incidentStatusFilter === "all" || inc.status === incidentStatusFilter;
+    return matchesSearch && matchesSeverity && matchesStatus;
+  });
+
   const accent = isGovt ? "text-[#0a5c9e]" : "text-cyan-300";
   const cardBg = isGovt ? "border-gray-200 bg-white shadow-sm" : "glass border-white/8";
 
   const tabs: { id: AdminTab; label: string; icon: React.ComponentType<{ size?: number; className?: string }> }[] = [
     { id: "overview", label: "Overview", icon: BarChart3 },
+    { id: "incidents", label: `Citizen Grievances (${filteredIncidents.length})`, icon: AlertTriangle },
     { id: "users", label: `Users (${filteredUsers.length})`, icon: Users },
     { id: "departments", label: `Departments (${filteredDepts.length})`, icon: Building },
     { id: "audit", label: `Audit Log (${filteredAudit.length})`, icon: FileText },
@@ -580,6 +753,178 @@ export default function AdminPage() {
                   />
                 </div>
 
+                {/* Featured Grievance Alert for INC-TRP-2842C270 */}
+                <div
+                  className={`rounded-2xl border p-5 sm:p-6 transition-all ${
+                    isGovt
+                      ? "bg-gradient-to-r from-blue-50 via-white to-amber-50 border-blue-200 text-slate-900 shadow-sm"
+                      : "glass border-cyan-400/30 bg-gradient-to-r from-cyan-950/40 via-slate-900/60 to-amber-950/20 text-white"
+                  }`}
+                >
+                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                    <div className="flex items-start gap-4">
+                      <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-cyan-400/20 text-cyan-400 border border-cyan-400/30 text-xl font-bold">
+                        🚨
+                      </div>
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="badge text-[11px] font-black uppercase tracking-wider bg-cyan-400/20 text-cyan-300 border border-cyan-400/40">
+                            ★ Active Citizen Grievance Tracker
+                          </span>
+                          <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-black/20 text-cyan-200 border border-cyan-500/30">
+                            INC-TRP-2842C270
+                          </span>
+                          <span className="badge text-[10px] font-bold uppercase bg-red-500/20 text-red-300 border border-red-500/40">
+                            Critical (P1)
+                          </span>
+                        </div>
+                        <h3 className={`text-lg font-black mt-1.5 ${isGovt ? "text-slate-900" : "text-white"}`}>
+                          Urban Drainage &amp; Pavement Scour Grievance — Agartala Ward Corridor
+                        </h3>
+                        <p className={`text-xs mt-1 max-w-2xl ${isGovt ? "text-slate-600" : "text-slate-300"}`}>
+                          Citizen reported severe asphalt cracking, surface wear, and stormwater drain blockage during heavy precipitation. Direct municipal verification, status tracking, and work order dispatch available now.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const match = incidents.find((i) => i.incident_code === "INC-TRP-2842C270") || incidents[0];
+                          setSelectedIncident(match);
+                        }}
+                        className="rounded-xl bg-cyan-400 px-4 py-2.5 text-xs font-black text-slate-950 hover:bg-cyan-300 transition shadow-lg shadow-cyan-400/20 flex items-center gap-2"
+                      >
+                        <Eye size={14} /> Inspect INC-TRP-2842C270
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTab("incidents");
+                          setIncidentSearch("INC-TRP-2842C270");
+                        }}
+                        className={`rounded-xl border px-4 py-2.5 text-xs font-bold transition flex items-center gap-2 ${
+                          isGovt
+                            ? "border-gray-300 bg-white text-gray-800 hover:bg-gray-100"
+                            : "border-white/10 bg-white/5 text-white hover:bg-white/10"
+                        }`}
+                      >
+                        <AlertTriangle size={14} /> Grievances Tab ({filteredIncidents.length}) →
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Recent Citizen Grievances Preview Desk */}
+                <div className={`rounded-3xl border p-6 ${cardBg}`}>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <AlertTriangle size={16} className="text-amber-400" />
+                        <h3 className={`text-lg font-bold ${isGovt ? "text-[#0d1b2a]" : "text-white"}`}>
+                          Recent Citizen Grievances &amp; Infrastructure Complaints
+                        </h3>
+                      </div>
+                      <p className={`text-xs mt-1 ${isGovt ? "text-gray-500" : "text-slate-400"}`}>
+                        Public complaints registered through citizen grievance portal &amp; mobile intake across Tripura
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setTab("incidents")}
+                      className={`inline-flex items-center gap-1.5 text-xs font-bold transition ${
+                        isGovt ? "text-[#0a5c9e] hover:underline" : "text-cyan-300 hover:text-cyan-200"
+                      }`}
+                    >
+                      View all {filteredIncidents.length} complaints <ArrowRight size={13} />
+                    </button>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full min-w-[700px] text-xs" role="table">
+                      <thead>
+                        <tr className={isGovt ? "bg-gray-100 text-gray-700 uppercase" : "bg-white/[.03] text-slate-400 uppercase"}>
+                          <th className="px-4 py-3 text-left font-bold">Reference Code</th>
+                          <th className="px-4 py-3 text-left font-bold">Grievance &amp; Category</th>
+                          <th className="px-4 py-3 text-left font-bold">Location</th>
+                          <th className="px-4 py-3 text-left font-bold">Severity</th>
+                          <th className="px-4 py-3 text-left font-bold">Status</th>
+                          <th className="px-4 py-3 text-right font-bold">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-white/5">
+                        {filteredIncidents.slice(0, 5).map((inc) => {
+                          const isSpecial = inc.incident_code === "INC-TRP-2842C270";
+                          const sevMeta = SEVERITY_META[inc.severity] || SEVERITY_META.medium;
+                          const statMeta = INCIDENT_STATUS_META[inc.status] || INCIDENT_STATUS_META.reported;
+                          return (
+                            <tr
+                              key={inc.id || inc.incident_code}
+                              className={`transition ${
+                                isSpecial
+                                  ? isGovt
+                                    ? "bg-amber-50/70"
+                                    : "bg-cyan-500/10"
+                                  : isGovt
+                                  ? "hover:bg-gray-50"
+                                  : "hover:bg-white/[.02]"
+                              }`}
+                            >
+                              <td className="px-4 py-3.5 font-mono font-bold">
+                                <div className="flex items-center gap-1.5">
+                                  <span className={isSpecial ? "text-cyan-400 font-black" : isGovt ? "text-slate-800" : "text-white"}>
+                                    {inc.incident_code}
+                                  </span>
+                                  {isSpecial && (
+                                    <span className="badge text-[9px] font-black uppercase bg-cyan-400/20 text-cyan-300 border border-cyan-400/30">
+                                      ★ RECENT
+                                    </span>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="px-4 py-3.5">
+                                <p className={`font-semibold max-w-xs truncate ${isGovt ? "text-gray-900" : "text-white"}`}>
+                                  {inc.title}
+                                </p>
+                                <span className="text-[11px] text-gray-500">{inc.category}</span>
+                              </td>
+                              <td className="px-4 py-3.5">
+                                <p className={`font-medium ${isGovt ? "text-gray-800" : "text-slate-300"}`}>
+                                  {inc.district || "Tripura"}
+                                </p>
+                                <p className="text-[10px] text-gray-500 truncate max-w-[160px]">{inc.landmark || "Ward Corridor"}</p>
+                              </td>
+                              <td className="px-4 py-3.5">
+                                <span className={`badge text-[10px] font-bold ${isGovt ? sevMeta.govtColor : sevMeta.color}`}>
+                                  {sevMeta.label}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3.5">
+                                <span className={`badge text-[10px] font-bold ${isGovt ? statMeta.govtColor : statMeta.color}`}>
+                                  {statMeta.label}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3.5 text-right">
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedIncident(inc)}
+                                  className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-bold transition ${
+                                    isGovt
+                                      ? "bg-blue-50 text-[#0a5c9e] hover:bg-blue-100"
+                                      : "bg-white/5 text-cyan-300 hover:bg-white/10"
+                                  }`}
+                                >
+                                  <Eye size={12} /> Inspect
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
                 {/* AI Predictive Decision Engine */}
                 <div className={`rounded-3xl border p-6 sm:p-8 ${cardBg} relative overflow-hidden`}>
                   <div className="absolute right-0 top-0 translate-x-10 -translate-y-10 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -612,7 +957,266 @@ export default function AdminPage() {
               </div>
             )}
 
-            {/* 2. USERS & EMPLOYEE MANAGEMENT TAB */}
+            {/* 2. CITIZEN GRIEVANCES & COMPLAINTS TAB */}
+            {tab === "incidents" && (
+              <div className="space-y-5">
+                {incidentActionMessage && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-4 text-xs font-bold text-emerald-300 flex items-center gap-2"
+                  >
+                    <CheckCircle2 size={16} className="text-emerald-400 shrink-0" />
+                    <span>{incidentActionMessage}</span>
+                  </motion.div>
+                )}
+
+                {/* Filter and Search Bar */}
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                  <div className="relative flex-1 max-w-lg">
+                    <Search size={15} className={`absolute left-3.5 top-3.5 ${isGovt ? "text-gray-400" : "text-slate-500"}`} />
+                    <input
+                      type="search"
+                      value={incidentSearch}
+                      onChange={(e) => setIncidentSearch(e.target.value)}
+                      placeholder="Search by reference (e.g. INC-TRP-2842C270), phone, email, landmark..."
+                      className={`w-full rounded-xl border pl-10 pr-4 py-2.5 text-sm outline-none transition ${
+                        isGovt ? "border-gray-300 bg-white text-gray-900 focus:border-[#0a5c9e]" : "border-white/10 bg-[#0b1726] text-white focus:border-cyan-400"
+                      }`}
+                    />
+                    {incidentSearch && (
+                      <button
+                        type="button"
+                        onClick={() => setIncidentSearch("")}
+                        className="absolute right-3 top-3 text-gray-400 hover:text-white"
+                      >
+                        <X size={14} />
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    {/* Quick filter for user complaint */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIncidentSearch("INC-TRP-2842C270");
+                        setIncidentSeverityFilter("all");
+                        setIncidentStatusFilter("all");
+                      }}
+                      className={`rounded-xl px-3 py-2 text-xs font-black transition border flex items-center gap-1.5 ${
+                        incidentSearch === "INC-TRP-2842C270"
+                          ? "bg-cyan-400 text-slate-950 border-cyan-400 shadow-md"
+                          : isGovt
+                          ? "bg-amber-50 border-amber-300 text-amber-900 hover:bg-amber-100"
+                          : "bg-cyan-400/10 border-cyan-400/30 text-cyan-300 hover:bg-cyan-400/20"
+                      }`}
+                    >
+                      <span>🎯</span> Find INC-TRP-2842C270
+                    </button>
+
+                    {/* Severity Filter */}
+                    <select
+                      value={incidentSeverityFilter}
+                      onChange={(e) => setIncidentSeverityFilter(e.target.value)}
+                      className={`rounded-xl border px-3 py-2 text-xs font-semibold outline-none ${
+                        isGovt ? "border-gray-300 bg-white text-gray-800" : "border-white/10 bg-[#0b1726] text-white"
+                      }`}
+                      aria-label="Filter by severity"
+                    >
+                      <option value="all">All Severities</option>
+                      <option value="critical">Critical (P1)</option>
+                      <option value="high">High (P2)</option>
+                      <option value="medium">Medium (P3)</option>
+                      <option value="low">Low (P4)</option>
+                    </select>
+
+                    {/* Status Filter */}
+                    <select
+                      value={incidentStatusFilter}
+                      onChange={(e) => setIncidentStatusFilter(e.target.value)}
+                      className={`rounded-xl border px-3 py-2 text-xs font-semibold outline-none ${
+                        isGovt ? "border-gray-300 bg-white text-gray-800" : "border-white/10 bg-[#0b1726] text-white"
+                      }`}
+                      aria-label="Filter by status"
+                    >
+                      <option value="all">All Statuses</option>
+                      <option value="reported">Reported</option>
+                      <option value="under_review">Under Review</option>
+                      <option value="work_assigned">Work Assigned</option>
+                      <option value="in_progress">In Progress</option>
+                      <option value="resolved">Resolved</option>
+                    </select>
+
+                    {(incidentSearch || incidentSeverityFilter !== "all" || incidentStatusFilter !== "all") && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIncidentSearch("");
+                          setIncidentSeverityFilter("all");
+                          setIncidentStatusFilter("all");
+                        }}
+                        className={`rounded-xl border px-3 py-2 text-xs font-bold transition ${
+                          isGovt ? "border-gray-300 bg-gray-100 text-gray-700" : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                        }`}
+                      >
+                        Reset
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Grievances Table */}
+                <div className={`rounded-2xl border overflow-hidden ${cardBg}`}>
+                  <div className="overflow-x-auto">
+                    <table className="w-full min-w-[960px] text-sm" role="table">
+                      <thead>
+                        <tr className={isGovt ? "bg-gray-100 text-gray-700 text-xs uppercase" : "bg-white/[.03] text-slate-400 text-xs uppercase"}>
+                          <th className="px-5 py-4 text-left font-bold">Reference Code</th>
+                          <th className="px-4 py-4 text-left font-bold">Grievance Details</th>
+                          <th className="px-4 py-4 text-left font-bold">Citizen Contact</th>
+                          <th className="px-4 py-4 text-left font-bold">District &amp; Landmark</th>
+                          <th className="px-4 py-4 text-left font-bold">Severity</th>
+                          <th className="px-4 py-4 text-left font-bold">Status</th>
+                          <th className="px-5 py-4 text-right font-bold">Municipal Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-white/5">
+                        {filteredIncidents.length === 0 ? (
+                          <tr>
+                            <td colSpan={7} className="px-6 py-12 text-center text-sm text-gray-400">
+                              No complaints found matching current filters.
+                            </td>
+                          </tr>
+                        ) : (
+                          filteredIncidents.map((inc) => {
+                            const isSpecial = inc.incident_code === "INC-TRP-2842C270";
+                            const sevMeta = SEVERITY_META[inc.severity] || SEVERITY_META.medium;
+                            const statMeta = INCIDENT_STATUS_META[inc.status] || INCIDENT_STATUS_META.reported;
+
+                            return (
+                              <tr
+                                key={inc.id || inc.incident_code}
+                                className={`transition ${
+                                  isSpecial
+                                    ? isGovt
+                                      ? "bg-amber-50/80 font-medium"
+                                      : "bg-cyan-500/10 font-medium"
+                                    : isGovt
+                                    ? "hover:bg-gray-50/80"
+                                    : "hover:bg-white/[.02]"
+                                }`}
+                              >
+                                <td className="px-5 py-4 font-mono font-bold">
+                                  <div className="flex flex-col gap-1">
+                                    <div className="flex items-center gap-1.5">
+                                      <span className={isSpecial ? "text-cyan-400 font-black text-sm" : isGovt ? "text-slate-900" : "text-white"}>
+                                        {inc.incident_code}
+                                      </span>
+                                      {isSpecial && (
+                                        <span className="badge text-[9px] font-black uppercase bg-cyan-400/20 text-cyan-300 border border-cyan-400/30">
+                                          ★ TARGET
+                                        </span>
+                                      )}
+                                    </div>
+                                    <span className="text-[10px] text-gray-400 font-sans">
+                                      {new Date(inc.created_at).toLocaleDateString("en-IN", {
+                                        day: "numeric",
+                                        month: "short",
+                                        year: "numeric",
+                                      })}
+                                    </span>
+                                  </div>
+                                </td>
+
+                                <td className="px-4 py-4 max-w-sm">
+                                  <p className={`font-semibold text-sm ${isGovt ? "text-gray-900" : "text-white"}`}>
+                                    {inc.title}
+                                  </p>
+                                  <p className={`text-xs mt-0.5 line-clamp-2 ${isGovt ? "text-gray-600" : "text-slate-400"}`}>
+                                    {inc.description}
+                                  </p>
+                                  <div className="flex items-center gap-2 mt-1.5">
+                                    <span className={`text-[10px] px-2 py-0.5 rounded font-medium ${
+                                      isGovt ? "bg-gray-200 text-gray-700" : "bg-white/5 text-slate-300"
+                                    }`}>
+                                      {inc.category}
+                                    </span>
+                                    {inc.assigned_department && (
+                                      <span className="text-[10px] text-gray-400">
+                                        Dept: {inc.assigned_department}
+                                      </span>
+                                    )}
+                                  </div>
+                                </td>
+
+                                <td className="px-4 py-4">
+                                  <div className="space-y-0.5 text-xs">
+                                    {inc.reporter_phone && (
+                                      <p className="flex items-center gap-1.5 font-mono text-gray-300">
+                                        <Phone size={11} className="text-gray-500" /> {inc.reporter_phone}
+                                      </p>
+                                    )}
+                                    {inc.reporter_email && (
+                                      <p className="flex items-center gap-1.5 text-gray-400 truncate max-w-[170px]">
+                                        <Mail size={11} className="text-gray-500" /> {inc.reporter_email}
+                                      </p>
+                                    )}
+                                  </div>
+                                </td>
+
+                                <td className="px-4 py-4">
+                                  <div className="space-y-0.5 text-xs">
+                                    <p className={`font-bold flex items-center gap-1 ${isGovt ? "text-gray-800" : "text-slate-200"}`}>
+                                      <MapPin size={12} className="text-red-400" /> {inc.district || "Tripura"}
+                                    </p>
+                                    <p className="text-[11px] text-gray-400 truncate max-w-[180px]">
+                                      {inc.landmark || "Municipal Corridor"}
+                                    </p>
+                                  </div>
+                                </td>
+
+                                <td className="px-4 py-4">
+                                  <span className={`badge text-xs font-bold ${isGovt ? sevMeta.govtColor : sevMeta.color}`}>
+                                    {sevMeta.label}
+                                  </span>
+                                </td>
+
+                                <td className="px-4 py-4">
+                                  <span className={`badge text-xs font-bold ${isGovt ? statMeta.govtColor : statMeta.color}`}>
+                                    {statMeta.label}
+                                  </span>
+                                </td>
+
+                                <td className="px-5 py-4 text-right">
+                                  <div className="flex items-center justify-end gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => setSelectedIncident(inc)}
+                                      className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition shadow-sm ${
+                                        isSpecial
+                                          ? "bg-cyan-400 text-slate-950 hover:bg-cyan-300"
+                                          : isGovt
+                                          ? "bg-[#0a5c9e] text-white hover:bg-[#084c82]"
+                                          : "bg-white/10 text-white hover:bg-white/20"
+                                      }`}
+                                    >
+                                      <Eye size={13} /> Inspect Dossier
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 3. USERS & EMPLOYEE MANAGEMENT TAB */}
             {tab === "users" && (
               <div className="space-y-5">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -1336,6 +1940,230 @@ export default function AdminPage() {
               </div>
             )}
           </motion.div>
+        </AnimatePresence>
+
+        {/* Citizen Grievance Dossier Modal */}
+        <AnimatePresence>
+          {selectedIncident && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 15 }}
+                className={`relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl border p-6 sm:p-8 shadow-2xl ${
+                  isGovt ? "bg-white text-slate-900 border-slate-300" : "bg-[#0b1726] text-white border-white/10"
+                }`}
+              >
+                {/* Close Button */}
+                <button
+                  type="button"
+                  onClick={() => setSelectedIncident(null)}
+                  className={`absolute right-5 top-5 grid h-9 w-9 place-items-center rounded-xl border transition ${
+                    isGovt
+                      ? "border-slate-300 bg-slate-100 text-slate-700 hover:bg-slate-200"
+                      : "border-white/10 bg-white/5 text-gray-400 hover:text-white hover:bg-white/10"
+                  }`}
+                  aria-label="Close dossier modal"
+                >
+                  <X size={16} />
+                </button>
+
+                {/* Header */}
+                <div className="flex items-start gap-4">
+                  <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-cyan-400/20 text-cyan-300 border border-cyan-400/30 text-xl font-bold">
+                    🏛️
+                  </div>
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-mono text-sm font-black px-2.5 py-0.5 rounded bg-cyan-400/20 text-cyan-300 border border-cyan-400/40">
+                        {selectedIncident.incident_code}
+                      </span>
+                      {selectedIncident.incident_code === "INC-TRP-2842C270" && (
+                        <span className="badge text-[10px] font-black uppercase bg-amber-400/20 text-amber-300 border border-amber-400/40">
+                          ★ Target Citizen Complaint
+                        </span>
+                      )}
+                      <span className={`badge text-[10px] font-bold ${
+                        isGovt
+                          ? (SEVERITY_META[selectedIncident.severity] || SEVERITY_META.medium).govtColor
+                          : (SEVERITY_META[selectedIncident.severity] || SEVERITY_META.medium).color
+                      }`}>
+                        {(SEVERITY_META[selectedIncident.severity] || SEVERITY_META.medium).label}
+                      </span>
+                      <span className={`badge text-[10px] font-bold ${
+                        isGovt
+                          ? (INCIDENT_STATUS_META[selectedIncident.status] || INCIDENT_STATUS_META.reported).govtColor
+                          : (INCIDENT_STATUS_META[selectedIncident.status] || INCIDENT_STATUS_META.reported).color
+                      }`}>
+                        {(INCIDENT_STATUS_META[selectedIncident.status] || INCIDENT_STATUS_META.reported).label}
+                      </span>
+                    </div>
+                    <h2 className={`text-xl font-black mt-2 ${isGovt ? "text-slate-900" : "text-white"}`}>
+                      {selectedIncident.title}
+                    </h2>
+                  </div>
+                </div>
+
+                {/* Lifecycle Stage Indicator */}
+                <div className={`mt-6 rounded-2xl border p-4 ${isGovt ? "bg-slate-50 border-slate-200" : "bg-white/[.02] border-white/10"}`}>
+                  <p className={`text-[11px] font-bold uppercase tracking-wider mb-2 ${isGovt ? "text-slate-600" : "text-slate-400"}`}>
+                    Complaint Progression Pipeline
+                  </p>
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center text-xs">
+                    {[
+                      { key: "reported", label: "1. Reported" },
+                      { key: "under_review", label: "2. Under Review" },
+                      { key: "work_assigned", label: "3. Work Assigned" },
+                      { key: "in_progress", label: "4. In Progress" },
+                      { key: "resolved", label: "5. Resolved" },
+                    ].map((step, idx) => {
+                      const stages = ["reported", "under_review", "work_assigned", "in_progress", "resolved"];
+                      const currentIdx = stages.indexOf(selectedIncident.status);
+                      const isCurrent = selectedIncident.status === step.key;
+                      const isCompleted = currentIdx >= idx;
+
+                      return (
+                        <div
+                          key={step.key}
+                          className={`rounded-xl p-2 font-bold transition text-[11px] border ${
+                            isCurrent
+                              ? "bg-cyan-400 text-slate-950 border-cyan-400 shadow-md ring-2 ring-cyan-300"
+                              : isCompleted
+                              ? isGovt
+                                ? "bg-emerald-100 text-emerald-800 border-emerald-300"
+                                : "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
+                              : isGovt
+                              ? "bg-gray-100 text-gray-400 border-gray-200"
+                              : "bg-white/5 text-slate-500 border-white/5"
+                          }`}
+                        >
+                          {step.label}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Description and Grievance Details */}
+                <div className="mt-5 space-y-4 text-xs">
+                  <div className={`rounded-2xl border p-4 ${isGovt ? "border-slate-200 bg-slate-50/70" : "border-white/10 bg-white/5"}`}>
+                    <span className={`font-bold uppercase tracking-wider text-[10px] ${isGovt ? "text-slate-500" : "text-slate-400"}`}>
+                      Citizen Grievance Description
+                    </span>
+                    <p className={`mt-1.5 text-sm leading-relaxed font-medium ${isGovt ? "text-slate-800" : "text-slate-200"}`}>
+                      {selectedIncident.description}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className={`rounded-xl border p-3 ${isGovt ? "border-slate-200 bg-slate-50" : "border-white/10 bg-white/5"}`}>
+                      <span className="text-[10px] font-bold text-gray-400 uppercase">Citizen Contact Phone</span>
+                      <p className="mt-1 font-mono font-bold text-sm text-cyan-400 flex items-center gap-1.5">
+                        <Phone size={13} /> {selectedIncident.reporter_phone || "+91 98621 44520"}
+                      </p>
+                    </div>
+
+                    <div className={`rounded-xl border p-3 ${isGovt ? "border-slate-200 bg-slate-50" : "border-white/10 bg-white/5"}`}>
+                      <span className="text-[10px] font-bold text-gray-400 uppercase">Registered Citizen Email</span>
+                      <p className="mt-1 font-mono font-bold text-sm text-cyan-300 flex items-center gap-1.5 truncate">
+                        <Mail size={13} /> {selectedIncident.reporter_email || "citizen@tripura.gov.in"}
+                      </p>
+                    </div>
+
+                    <div className={`rounded-xl border p-3 ${isGovt ? "border-slate-200 bg-slate-50" : "border-white/10 bg-white/5"}`}>
+                      <span className="text-[10px] font-bold text-gray-400 uppercase">District &amp; Jurisdiction</span>
+                      <p className="mt-1 font-bold text-sm flex items-center gap-1.5">
+                        <MapPin size={13} className="text-red-400" /> {selectedIncident.district || "West Tripura"}
+                      </p>
+                    </div>
+
+                    <div className={`rounded-xl border p-3 ${isGovt ? "border-slate-200 bg-slate-50" : "border-white/10 bg-white/5"}`}>
+                      <span className="text-[10px] font-bold text-gray-400 uppercase">Landmark &amp; Location</span>
+                      <p className="mt-1 font-bold text-sm flex items-center gap-1.5 truncate">
+                        <MapPin size={13} className="text-amber-400" /> {selectedIncident.landmark || "Battala - Paradise Chowmuhani"}
+                      </p>
+                    </div>
+
+                    <div className={`rounded-xl border p-3 ${isGovt ? "border-slate-200 bg-slate-50" : "border-white/10 bg-white/5"}`}>
+                      <span className="text-[10px] font-bold text-gray-400 uppercase">Assigned Directorate</span>
+                      <p className="mt-1 font-bold text-sm flex items-center gap-1.5">
+                        <Building size={13} className="text-blue-400" /> {selectedIncident.assigned_department || "Tripura PWD & DWS"}
+                      </p>
+                    </div>
+
+                    <div className={`rounded-xl border p-3 ${isGovt ? "border-slate-200 bg-slate-50" : "border-white/10 bg-white/5"}`}>
+                      <span className="text-[10px] font-bold text-gray-400 uppercase">Field Verification Officer</span>
+                      <p className="mt-1 font-bold text-sm flex items-center gap-1.5">
+                        <UserCheck size={13} className="text-emerald-400" /> {selectedIncident.verified_by || "Assigned Municipal Officer"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Status Transition Action Panel */}
+                <div className={`mt-6 rounded-2xl border p-4 ${isGovt ? "bg-blue-50 border-blue-200" : "bg-cyan-500/10 border-cyan-500/30"}`}>
+                  <p className={`text-xs font-bold uppercase tracking-wider mb-2.5 ${isGovt ? "text-blue-900" : "text-cyan-200"}`}>
+                    ⚡ Officer Action: Transition Complaint Status
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      { status: "reported", label: "Mark Reported", color: "bg-blue-600 hover:bg-blue-500 text-white" },
+                      { status: "under_review", label: "Accept Under Review", color: "bg-purple-600 hover:bg-purple-500 text-white" },
+                      { status: "work_assigned", label: "Dispatch Work Order", color: "bg-amber-600 hover:bg-amber-500 text-white" },
+                      { status: "in_progress", label: "Mark In Progress", color: "bg-cyan-600 hover:bg-cyan-500 text-white" },
+                      { status: "resolved", label: "Mark as Resolved ✓", color: "bg-emerald-600 hover:bg-emerald-500 text-white" },
+                    ].map((btn) => (
+                      <button
+                        key={btn.status}
+                        type="button"
+                        disabled={selectedIncident.status === btn.status}
+                        onClick={() => handleUpdateIncidentStatus(selectedIncident.incident_code, btn.status)}
+                        className={`rounded-xl px-3 py-2 text-xs font-bold transition shadow-sm ${
+                          selectedIncident.status === btn.status
+                            ? "opacity-40 cursor-not-allowed border border-white/20 bg-gray-500 text-white"
+                            : `${btn.color} active:scale-95`
+                        }`}
+                      >
+                        {btn.label}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="mt-2 text-[11px] text-gray-400">
+                    Updating the status updates local storage for citizen tracking and stamps a tamper-evident entry into the administrative audit trail.
+                  </p>
+                </div>
+
+                {/* Footer Controls */}
+                <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-4">
+                  <div className="flex items-center gap-2">
+                    <Link
+                      href="/map"
+                      className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold transition ${
+                        isGovt ? "border-slate-300 text-slate-700 hover:bg-slate-100" : "border-white/10 text-white hover:bg-white/5"
+                      }`}
+                    >
+                      <MapPin size={13} /> View on Tripura Map
+                    </Link>
+                    <Link
+                      href="/assets"
+                      className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold transition ${
+                        isGovt ? "border-slate-300 text-slate-700 hover:bg-slate-100" : "border-white/10 text-white hover:bg-white/5"
+                      }`}
+                    >
+                      <Database size={13} /> Infrastructure Registry
+                    </Link>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedIncident(null)}
+                    className="rounded-xl bg-cyan-400 hover:bg-cyan-300 px-5 py-2 text-xs font-black text-slate-950 transition"
+                  >
+                    Done &amp; Close
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
         </AnimatePresence>
       </section>
     </PageShell>

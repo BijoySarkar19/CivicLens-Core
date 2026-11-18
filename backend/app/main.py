@@ -29,16 +29,16 @@ async def lifespan(app: FastAPI):
         seed_admin()
     except Exception as exc:
         logger.warning("Database unavailable during startup seed: %s. Operating in standalone demo mode.", exc)
-    logger.info("CivicLens Core Part 1 API starting")
-    logger.info("Part 2 AI feature flag: %s", settings.civiclens_ai_enabled)
+    logger.info("CivicLens AI Platform API starting")
+    logger.info("Predictive AI Engine status: %s", settings.civiclens_ai_enabled)
     yield
-    logger.info("CivicLens Core Part 1 API shutting down")
+    logger.info("CivicLens AI Platform API shutting down")
 
 
 app = FastAPI(
-    title="CivicLens Core API",
-    description="Secure public infrastructure operations platform — Part 1.",
-    version="1.0.0",
+    title="CivicLens AI Platform API",
+    description="Smart urban governance & public infrastructure predictive intelligence platform.",
+    version="2.1.0",
     lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc",
@@ -94,7 +94,7 @@ async def security_and_request_middleware(request: Request, call_next):
 
 @app.get("/health", tags=["System"])
 def health():
-    return {"status": "healthy", "service": "civiclens-ai-platform", "version": "2.1.0", "part": "part-1"}
+    return {"status": "healthy", "service": "civiclens-ai-platform", "version": "2.1.0"}
 
 
 @app.get("/ready", tags=["System"])

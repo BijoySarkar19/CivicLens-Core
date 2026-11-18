@@ -143,7 +143,7 @@ export default function NotFound() {
               : "border-white/5 bg-white/[.02] text-slate-500"
           }`}
         >
-          CivicLens Core Platform · Part 1 Public Infrastructure Operations · Ref: 404-BOUNDARY-CHECK
+          CivicLens AI Platform · Smart Urban Infrastructure Operations &amp; Spatial Intelligence · Ref: 404-BOUNDARY-CHECK
         </div>
       </div>
     </main>

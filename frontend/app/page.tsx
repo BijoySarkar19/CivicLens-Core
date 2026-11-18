@@ -117,7 +117,7 @@ export default function Home() {
               {/* Badge */}
               <span className="inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-4 py-2 text-xs font-semibold uppercase tracking-[.2em] text-cyan-200">
                 <span className="inline-block h-2 w-2 rounded-full bg-cyan-400 animate-pulse" aria-hidden="true" />
-                Part 1 · Civic Operations Foundation
+                Smart Urban Governance &amp; Operations Command
               </span>
 
               <h1 className="mt-7 max-w-5xl text-5xl font-black tracking-tight sm:text-6xl lg:text-7xl leading-tight">
@@ -135,7 +135,7 @@ export default function Home() {
                   />
                 </span>
                 ,{" "}
-                <span className="text-slate-300">without fabricated AI.</span>
+                <span className="text-slate-300">powered by predictive AI.</span>
               </h1>
 
               <p className="mt-7 max-w-2xl text-lg leading-8 text-slate-400">
@@ -225,8 +225,8 @@ export default function Home() {
               <span className="text-cyan-300">civic infrastructure</span>
             </h2>
             <p className="mt-4 max-w-xl mx-auto text-slate-400">
-              Built on real transactional data — not dashboards filled with
-              placeholder numbers or fabricated AI scores.
+              Built on verified spatial data — integrated with explainable computer
+              vision, 90-day predictive failure forecasting, and automated municipal work orders.
             </p>
           </motion.div>
 

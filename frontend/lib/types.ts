@@ -26,6 +26,7 @@ export type Incident = {
   reporter_email?: string | null;
   reporter_phone?: string | null;
   district?: string | null;
+  city?: string | null;
   landmark?: string | null;
   assigned_department?: string | null;
   verified_by?: string | null;
@@ -1439,6 +1440,25 @@ export const TRIPURA_SEED_ASSETS: Asset[] = [
 
 /* ── Rich Demo Incidents Across Tripura ── */
 export const DEMO_INCIDENTS: Incident[] = [
+  {
+    id: 100,
+    incident_code: "INC-TRP-2842C270",
+    title: "Urban Drainage & Pavement Scour Grievance — Agartala Ward Corridor",
+    description: "Citizen reported severe asphalt cracking, surface wear, and stormwater drain blockage during heavy precipitation. Registered via Tripura Citizen Grievance Portal for immediate municipal verification, photogrammetric defect scoring, and field contractor work order dispatch.",
+    asset_id: 1,
+    category: "Drainage & Road Pavement",
+    severity: "critical",
+    priority: "P1",
+    status: "reported",
+    reporter_email: "citizen.redressal@tripura.gov.in",
+    reporter_phone: "+91 98621 44520",
+    district: "West Tripura",
+    city: "Agartala",
+    landmark: "Battala - Paradise Chowmuhani Arterial Stretch",
+    assigned_department: "Public Works Department & DWS",
+    verified_by: "Pending Officer Assignment",
+    created_at: new Date(Date.now() - 1000 * 60 * 18).toISOString(),
+  },
   {
     id: 101,
     incident_code: "INC-TRP-94821",

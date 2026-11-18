@@ -21,6 +21,6 @@ def analytics_summary(db: DatabaseSession, current_user: CurrentUser):
         "assets": assets, "incidents": incidents, "open_incidents": open_incidents,
         "critical_incidents": critical, "work_orders": work_orders,
         "open_work_orders": open_work, "inspections": inspections,
-        "maintenance_records": maintenance, "part": "part-1",
-        "ai_enabled": False, "source": "transactional_database",
+        "maintenance_records": maintenance,
+        "ai_enabled": True, "source": "spatial_transactional_engine",
     }

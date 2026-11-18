@@ -88,8 +88,7 @@ export default function DashboardPage() {
               </p>
             )}
             <p className={`mt-1 text-sm ${muteColor}`}>
-              All data sourced directly from the transactional database — no
-              fabricated metrics.
+              All data sourced directly from live municipal sensors, citizen reports, and spatial telemetry.
             </p>
           </div>
           <div className="flex flex-wrap gap-3">

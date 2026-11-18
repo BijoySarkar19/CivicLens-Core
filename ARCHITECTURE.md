@@ -32,7 +32,7 @@ Redis is for transient/cache/job-broker concerns.
 
 Object storage is for evidence and large objects; metadata belongs in PostgreSQL.
 
-Part 2 can consume stable APIs and events without embedding ML logic in CRUD handlers.
+Machine learning and computer vision services consume stable APIs and asynchronous domain events without embedding heavy ML inference weights directly inside transactional CRUD handlers.
 
 ## Completion rule
 

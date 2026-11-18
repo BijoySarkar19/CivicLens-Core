@@ -320,16 +320,16 @@ CivicLens-Core/
 | **🏗️ PWD Engineer View** | [`/admin`](http://localhost:3000/admin) | `pwd.officer@tripura.gov.in`<br>`PwdPass123!` | **Departmentally Scoped (TR-PWD)**: 26 PWD road/bridge infrastructure assets, 4 PWD engineers, road repair work orders, civil maintenance audit trail (Dismissal action locked) |
 | **💧 DWS Inspector View** | [`/admin`](http://localhost:3000/admin) | `dws.inspector@tripura.gov.in`<br>`DwsPass123!` | **Departmentally Scoped (TR-DWS)**: 18 DWS water treatment & distribution assets, 3 field inspectors, pipeline maintenance work tickets, water audits (Dismissal action locked) |
 
-> 💡 **Instant Role Switcher**: When logged into `/admin`, officers can also use the interactive top header pills (`[👑 Super Admin]`, `[🏗️ PWD Engineer]`, `[💧 DWS Inspector]`) to simulate and evaluate different role views dynamically.
+> 💡 **Instant Personnel Switcher**: When logged into `/admin`, officers can use the header control (`Switch Personnel: [👑 Super Admin]`, `[🏗️ PWD Engineer]`, `[💧 DWS Inspector]`) to simulate role-based scoping in real time.
 
 ### 2. 🌐 Public Citizen Portals & Spatial Intelligence (Open Access / OTP)
 
 | Civic Service | Route | Access Method | Key Capabilities & Features |
 | :--- | :--- | :--- | :--- |
-| **Citizen Grievance Submission** | [`/report`](http://localhost:3000/report) | Public Access (No Login) | Zero-trust 50MB photo upload, EXIF GPS location capture, trilingual redressal (EN / বাংলা / हिन्दी), word counter (5 to 10,000 words) |
-| **Grievance Status Tracker** | [`/login`](http://localhost:3000/login) | Mobile: `98621 44520`<br>Demo OTP: `123456` | Real-time complaint progression timeline, assigned contractor squad, SLA countdown, and resolution certificates |
+| **Citizen Grievance Submission** | [`/report`](http://localhost:3000/report) | Public Access (No Login) | Zero-trust 50MB photo upload, optional phone number entry, EXIF GPS location capture, trilingual redressal (EN / বাংলা / हिन्दी), word counter (5 to 10,000 words) |
+| **Grievance Status Tracker** | [`/login`](http://localhost:3000/login) | Reference Code (e.g. `INC-TRP-2842C270`) or Mobile Number | Real-time complaint progression timeline, attached photographic inspection evidence, assigned contractor squad, and resolution certificates |
 | **Predictive AI Suite** | [`/ai`](http://localhost:3000/ai) | Public Access (Interactive) | Computer Vision damage classifier head, photo upload scan, 90-day risk degradation curve, What-If budget slider |
-| **Tripura GIS Heatmap** | [`/map`](http://localhost:3000/map) | Public Access (Interactive) | High-performance Leaflet spatial map, multi-district zoom, asset marker focus, and defect cluster pins |
+| **Tripura GIS Heatmap** | [`/map`](http://localhost:3000/map) | Public Access (Interactive) | High-performance Leaflet spatial map, multi-district zoom, coordinate-focused deep zoom (`zoom=16`), and asset marker pins |
 | **State Infrastructure Registry** | [`/assets`](http://localhost:3000/assets) | Public Access (Search & Filter) | 96+ Tripura assets with category filters: Municipal Wards, Gram Panchayats, Railways, Tunnels, Bridges, Rivers, Tourist |
 
 ---

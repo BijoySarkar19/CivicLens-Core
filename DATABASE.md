@@ -53,6 +53,6 @@ Dataset sources retain:
 - record count
 - processing status
 
-## Part 2 readiness
+## Predictive AI & Analytics Readiness
 
 Historical condition, incident, inspection and maintenance records are retained so future feature pipelines can derive historical features without turning PostgreSQL into a model-training artifact store.

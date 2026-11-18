@@ -18,7 +18,7 @@ jobs:
       - name: Compile Python
         run: python -m compileall backend/app
       - name: Test backend
-        run: cd backend && pytest -q
+        run: cd backend && python -m pytest -q
       - name: Lint backend
         run: ruff check backend/app backend/tests
 

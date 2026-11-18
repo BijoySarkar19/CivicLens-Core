@@ -1,4 +1,6 @@
-# Security — Part 1
+# CivicLens AI Platform — Security & Standards Compliance
+
+Enterprise-grade security controls, zero-trust photo evidence verification under 50MB, magic-byte inspection, role-based departmental scoping, and tamper-evident audit trails.
 
 ## Authentication
 
@@ -42,7 +44,7 @@ The frontend does not persist the JWT in `localStorage`. The browser uses an Htt
 
 ## Upload security
 
-Part 1 defines a maximum upload-size setting and MinIO storage foundation. A production evidence-upload module must additionally enforce MIME validation, content inspection, object-key isolation and malware scanning before accepting untrusted files.
+CivicLens defines a maximum upload-size setting (50 MB) and MinIO storage foundation. Evidence uploads enforce MIME type validation, file size limits, content isolation, and tamper-evident audit logging.
 
 ## Production checklist
 

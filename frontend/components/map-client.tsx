@@ -24,13 +24,32 @@ function makeIcon(isGovt: boolean, isSelected = false) {
   });
 }
 
-function FitBounds({ assets, selectedAssetId }: { assets: Asset[]; selectedAssetId?: number | null }) {
+export type TargetLocation = {
+  lat: number;
+  lng: number;
+  zoom?: number;
+  title?: string;
+};
+
+function FitBounds({
+  assets,
+  selectedAssetId,
+  targetLocation,
+}: {
+  assets: Asset[];
+  selectedAssetId?: number | null;
+  targetLocation?: TargetLocation | null;
+}) {
   const map = useMap();
   useEffect(() => {
+    if (targetLocation && targetLocation.lat != null && targetLocation.lng != null) {
+      map.flyTo([targetLocation.lat, targetLocation.lng], targetLocation.zoom || 16, { duration: 1.5 });
+      return;
+    }
     if (selectedAssetId) {
       const match = assets.find((x) => x.id === selectedAssetId);
       if (match?.latitude && match?.longitude) {
-        map.flyTo([match.latitude, match.longitude], 15, { duration: 1.5 });
+        map.flyTo([match.latitude, match.longitude], 16, { duration: 1.5 });
         return;
       }
     }
@@ -43,16 +62,18 @@ function FitBounds({ assets, selectedAssetId }: { assets: Asset[]; selectedAsset
     if (points.length) {
       map.fitBounds(points, { padding: [30, 30], maxZoom: 13 });
     }
-  }, [assets, selectedAssetId, map]);
+  }, [assets, selectedAssetId, targetLocation, map]);
   return null;
 }
 
 export function MapClient({
   assets,
   selectedAssetId,
+  targetLocation,
 }: {
   assets: Asset[];
   selectedAssetId?: number | null;
+  targetLocation?: TargetLocation | null;
 }) {
   const { isGovt } = useGovtMode();
   const defaultIcon = makeIcon(isGovt, false);
@@ -82,7 +103,27 @@ export function MapClient({
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        <FitBounds assets={assets} selectedAssetId={selectedAssetId} />
+        <FitBounds assets={assets} selectedAssetId={selectedAssetId} targetLocation={targetLocation} />
+        {targetLocation && (
+          <Marker
+            position={[targetLocation.lat, targetLocation.lng]}
+            icon={selectedIcon}
+          >
+            <Popup autoClose={false}>
+              <div style={{ minWidth: 200, padding: "4px" }}>
+                <div style={{ fontWeight: "bold", fontSize: 13, color: "#ef4444", marginBottom: 3 }}>
+                  🎯 Focused Grievance / Asset
+                </div>
+                <div style={{ fontWeight: 600, fontSize: 12, marginBottom: 4 }}>
+                  {targetLocation.title || "Target Coordinate"}
+                </div>
+                <div style={{ fontSize: 11, fontFamily: "monospace", color: "#64748b" }}>
+                  LAT: {targetLocation.lat.toFixed(4)}, LNG: {targetLocation.lng.toFixed(4)} (Zoom {targetLocation.zoom || 16})
+                </div>
+              </div>
+            </Popup>
+          </Marker>
+        )}
         {located.map((asset) => {
           const isSelected = selectedAssetId === asset.id;
           return (

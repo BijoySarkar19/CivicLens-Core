@@ -40,6 +40,7 @@ import {
   BadgeCheck,
   Radio,
   FileCode,
+  Camera,
 } from "lucide-react";
 import { apiFetch, getCurrentUser, setCurrentUser, UserRole } from "@/lib/api";
 import {
@@ -85,27 +86,46 @@ const INCIDENT_STATUS_META: Record<string, { label: string; color: string; govtC
   },
 };
 
-const SEVERITY_META: Record<string, { label: string; color: string; govtColor: string }> = {
+const SEVERITY_META: Record<string, { label: string; line1: string; line2: string; color: string; govtColor: string }> = {
   critical: {
     label: "Critical (P1)",
+    line1: "Critical",
+    line2: "(P1)",
     color: "bg-red-500/20 text-red-300 border-red-500/40",
     govtColor: "bg-red-100 text-red-800 border-red-300",
   },
   high: {
     label: "High (P2)",
+    line1: "High",
+    line2: "(P2)",
     color: "bg-orange-500/20 text-orange-300 border-orange-500/40",
     govtColor: "bg-orange-100 text-orange-800 border-orange-300",
   },
   medium: {
     label: "Medium (P3)",
+    line1: "Medium",
+    line2: "(P3)",
     color: "bg-yellow-500/20 text-yellow-300 border-yellow-500/40",
     govtColor: "bg-yellow-100 text-yellow-800 border-yellow-300",
   },
   low: {
     label: "Low (P4)",
+    line1: "Low",
+    line2: "(P4)",
     color: "bg-slate-500/20 text-slate-300 border-slate-500/40",
     govtColor: "bg-gray-100 text-gray-800 border-gray-300",
   },
+};
+
+const DISTRICT_COORDS: Record<string, [number, number]> = {
+  "West Tripura": [23.8315, 91.2868],
+  "Gomati": [23.5336, 91.4878],
+  "South Tripura": [23.2450, 91.4600],
+  "Sepahijala": [23.6820, 91.3320],
+  "Khowai": [24.0620, 91.6040],
+  "Dhalai": [23.9242, 91.8540],
+  "Unakoti": [24.2986, 92.0084],
+  "North Tripura": [24.3734, 92.1643],
 };
 
 const ROLE_LABELS: Record<string, { label: string; color: string }> = {
@@ -284,11 +304,17 @@ export default function AdminPage() {
                 severity: (p.severity as any) || "high",
                 priority: (p.severity === "critical" ? "P1" : p.severity === "high" ? "P2" : "P3") as any,
                 status: (p.status as any) || "reported",
-                reporter_email: p.email || "citizen.redressal@tripura.gov.in",
-                reporter_phone: p.phone || "+91 98621 44520",
+                reporter_email: p.email || "citizen@tripura.gov.in",
+                reporter_phone: (() => {
+                  const ph = p.phone && typeof p.phone === "string" ? p.phone.trim() : "";
+                  return ph && ph !== "+91 98621 44520" && ph !== "9862144520" && ph !== "+91 9876543210" ? ph : null;
+                })(),
                 district: p.district || "West Tripura",
                 city: p.city || "Agartala",
                 landmark: p.landmark || "Ward Corridor",
+                latitude: p.latitude || null,
+                longitude: p.longitude || null,
+                photo_url: p.photo || p.photo_url || null,
                 assigned_department:
                   p.category?.toLowerCase().includes("water") || p.category?.toLowerCase().includes("pipeline")
                     ? "Drinking Water & Sanitation (DWS)"
@@ -577,10 +603,10 @@ export default function AdminPage() {
               </div>
             </div>
 
-            {/* Quick Switch Persona Buttons */}
+            {/* Quick Switch Personnel Buttons */}
             <div className="flex flex-wrap items-center gap-2 pt-2 lg:pt-0 border-t lg:border-t-0 border-black/10 dark:border-white/10 shrink-0">
-              <span className={`text-[11px] font-bold uppercase tracking-wider mr-1 ${isGovt ? "text-slate-600" : "text-slate-400"}`}>
-                Switch Persona:
+              <span className={`text-xs font-bold tracking-wide mr-1 ${isGovt ? "text-slate-800 font-extrabold" : "text-slate-200"}`}>
+                Switch Personnel:
               </span>
               <button
                 type="button"
@@ -876,8 +902,11 @@ export default function AdminPage() {
                                     {inc.incident_code}
                                   </span>
                                   {isSpecial && (
-                                    <span className="badge text-[9px] font-black uppercase bg-cyan-400/20 text-cyan-300 border border-cyan-400/30">
-                                      ★ RECENT
+                                    <span className={`inline-flex flex-col items-center justify-center text-center leading-none px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${
+                                      isGovt ? "bg-amber-100 text-amber-900 border border-amber-300" : "bg-cyan-400/20 text-cyan-300 border border-cyan-400/30"
+                                    }`}>
+                                      <span className="w-full text-center text-[10px] leading-none mb-0.5">★</span>
+                                      <span className="w-full text-center text-[8px] leading-none tracking-wider">TARGET</span>
                                     </span>
                                   )}
                                 </div>
@@ -894,13 +923,14 @@ export default function AdminPage() {
                                 </p>
                                 <p className="text-[10px] text-gray-500 truncate max-w-[160px]">{inc.landmark || "Ward Corridor"}</p>
                               </td>
-                              <td className="px-4 py-3.5">
-                                <span className={`badge text-[10px] font-bold ${isGovt ? sevMeta.govtColor : sevMeta.color}`}>
-                                  {sevMeta.label}
+                              <td className="px-4 py-3.5 text-center align-middle">
+                                <span className={`inline-flex flex-col items-center justify-center text-center px-3 py-1 rounded-full text-[10px] font-bold border leading-tight min-w-[76px] mx-auto ${isGovt ? sevMeta.govtColor : sevMeta.color}`}>
+                                  <span className="w-full text-center leading-tight">{sevMeta.line1}</span>
+                                  <span className="w-full text-center text-[9px] font-black opacity-90 leading-tight">{sevMeta.line2}</span>
                                 </span>
                               </td>
-                              <td className="px-4 py-3.5">
-                                <span className={`badge text-[10px] font-bold ${isGovt ? statMeta.govtColor : statMeta.color}`}>
+                              <td className="px-4 py-3.5 text-center">
+                                <span className={`inline-flex items-center justify-center text-center px-2.5 py-1 rounded-full text-[10px] font-bold ${isGovt ? statMeta.govtColor : statMeta.color}`}>
                                   {statMeta.label}
                                 </span>
                               </td>
@@ -1114,8 +1144,11 @@ export default function AdminPage() {
                                         {inc.incident_code}
                                       </span>
                                       {isSpecial && (
-                                        <span className="badge text-[9px] font-black uppercase bg-cyan-400/20 text-cyan-300 border border-cyan-400/30">
-                                          ★ TARGET
+                                        <span className={`inline-flex flex-col items-center justify-center text-center leading-none px-2 py-1 rounded text-[9px] font-black uppercase tracking-wider ${
+                                          isGovt ? "bg-amber-100 text-amber-900 border border-amber-300" : "bg-cyan-400/20 text-cyan-300 border border-cyan-400/30"
+                                        }`}>
+                                          <span className="w-full text-center text-[10px] leading-none mb-0.5">★</span>
+                                          <span className="w-full text-center text-[8px] leading-none tracking-wider">TARGET</span>
                                         </span>
                                       )}
                                     </div>
@@ -1130,9 +1163,16 @@ export default function AdminPage() {
                                 </td>
 
                                 <td className="px-4 py-4 max-w-sm">
-                                  <p className={`font-semibold text-sm ${isGovt ? "text-gray-900" : "text-white"}`}>
-                                    {inc.title}
-                                  </p>
+                                  <div className="flex items-start justify-between gap-2">
+                                    <p className={`font-semibold text-sm ${isGovt ? "text-gray-900" : "text-white"}`}>
+                                      {inc.title}
+                                    </p>
+                                    {inc.photo_url && (
+                                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-cyan-400 bg-cyan-950/40 border border-cyan-500/30 px-1.5 py-0.5 rounded shrink-0">
+                                        <Camera size={11} /> Photo Evidence
+                                      </span>
+                                    )}
+                                  </div>
                                   <p className={`text-xs mt-0.5 line-clamp-2 ${isGovt ? "text-gray-600" : "text-slate-400"}`}>
                                     {inc.description}
                                   </p>
@@ -1152,10 +1192,12 @@ export default function AdminPage() {
 
                                 <td className="px-4 py-4">
                                   <div className="space-y-0.5 text-xs">
-                                    {inc.reporter_phone && (
+                                    {inc.reporter_phone ? (
                                       <p className="flex items-center gap-1.5 font-mono text-gray-300">
                                         <Phone size={11} className="text-gray-500" /> {inc.reporter_phone}
                                       </p>
+                                    ) : (
+                                      <p className="text-[11px] text-gray-500 italic">No phone provided</p>
                                     )}
                                     {inc.reporter_email && (
                                       <p className="flex items-center gap-1.5 text-gray-400 truncate max-w-[170px]">
@@ -1176,14 +1218,15 @@ export default function AdminPage() {
                                   </div>
                                 </td>
 
-                                <td className="px-4 py-4">
-                                  <span className={`badge text-xs font-bold ${isGovt ? sevMeta.govtColor : sevMeta.color}`}>
-                                    {sevMeta.label}
+                                <td className="px-4 py-4 text-center align-middle">
+                                  <span className={`inline-flex flex-col items-center justify-center text-center px-3 py-1.5 rounded-full text-xs font-bold border leading-tight min-w-[76px] mx-auto ${isGovt ? sevMeta.govtColor : sevMeta.color}`}>
+                                    <span className="w-full text-center leading-tight">{sevMeta.line1}</span>
+                                    <span className="w-full text-center text-[10px] font-black opacity-90 leading-tight">{sevMeta.line2}</span>
                                   </span>
                                 </td>
 
-                                <td className="px-4 py-4">
-                                  <span className={`badge text-xs font-bold ${isGovt ? statMeta.govtColor : statMeta.color}`}>
+                                <td className="px-4 py-4 text-center">
+                                  <span className={`inline-flex items-center justify-center text-center px-3 py-1 rounded-full text-xs font-bold ${isGovt ? statMeta.govtColor : statMeta.color}`}>
                                     {statMeta.label}
                                   </span>
                                 </td>
@@ -2058,9 +2101,13 @@ export default function AdminPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className={`rounded-xl border p-3 ${isGovt ? "border-slate-200 bg-slate-50" : "border-white/10 bg-white/5"}`}>
                       <span className="text-[10px] font-bold text-gray-400 uppercase">Citizen Contact Phone</span>
-                      <p className="mt-1 font-mono font-bold text-sm text-cyan-400 flex items-center gap-1.5">
-                        <Phone size={13} /> {selectedIncident.reporter_phone || "+91 98621 44520"}
-                      </p>
+                      {selectedIncident.reporter_phone ? (
+                        <p className="mt-1 font-mono font-bold text-sm text-cyan-400 flex items-center gap-1.5">
+                          <Phone size={13} /> {selectedIncident.reporter_phone}
+                        </p>
+                      ) : (
+                        <p className="mt-1 text-xs text-gray-400 italic font-medium">Not Provided (Optional)</p>
+                      )}
                     </div>
 
                     <div className={`rounded-xl border p-3 ${isGovt ? "border-slate-200 bg-slate-50" : "border-white/10 bg-white/5"}`}>
@@ -2098,6 +2145,44 @@ export default function AdminPage() {
                       </p>
                     </div>
                   </div>
+
+                  {/* Site Photo Evidence Section */}
+                  <div className={`rounded-2xl border p-4 ${isGovt ? "border-slate-200 bg-slate-50" : "border-white/10 bg-white/5"}`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className={`font-bold uppercase tracking-wider text-[10px] flex items-center gap-1.5 ${isGovt ? "text-slate-600" : "text-cyan-300"}`}>
+                        <Camera size={13} /> Site Photo Evidence Attached by Citizen
+                      </span>
+                      {selectedIncident.photo_url && (
+                        <span className="badge text-[9px] font-bold uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                          ✓ Photo Verified
+                        </span>
+                      )}
+                    </div>
+                    {selectedIncident.photo_url ? (
+                      <div className="rounded-xl overflow-hidden border border-white/10 bg-black/40">
+                        <img
+                          src={selectedIncident.photo_url}
+                          alt="Citizen Site Evidence"
+                          className="w-full max-h-72 object-contain bg-black/50"
+                        />
+                        <div className="p-2.5 bg-black/70 text-slate-300 text-xs flex items-center justify-between">
+                          <span>Inspection Image Evidence</span>
+                          <a
+                            href={selectedIncident.photo_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-cyan-300 hover:underline flex items-center gap-1 text-[11px] font-bold"
+                          >
+                            Open Full Resolution <ExternalLink size={11} />
+                          </a>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-4 text-center rounded-xl border border-dashed border-gray-400/20 text-gray-400 text-xs italic">
+                        No photo was attached by citizen for this grievance.
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Status Transition Action Panel */}
@@ -2133,34 +2218,50 @@ export default function AdminPage() {
                   </p>
                 </div>
 
-                {/* Footer Controls */}
-                <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-4">
-                  <div className="flex items-center gap-2">
-                    <Link
-                      href="/map"
-                      className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold transition ${
-                        isGovt ? "border-slate-300 text-slate-700 hover:bg-slate-100" : "border-white/10 text-white hover:bg-white/5"
-                      }`}
-                    >
-                      <MapPin size={13} /> View on Tripura Map
-                    </Link>
-                    <Link
-                      href="/assets"
-                      className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold transition ${
-                        isGovt ? "border-slate-300 text-slate-700 hover:bg-slate-100" : "border-white/10 text-white hover:bg-white/5"
-                      }`}
-                    >
-                      <Database size={13} /> Infrastructure Registry
-                    </Link>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedIncident(null)}
-                    className="rounded-xl bg-cyan-400 hover:bg-cyan-300 px-5 py-2 text-xs font-black text-slate-950 transition"
-                  >
-                    Done &amp; Close
-                  </button>
-                </div>
+                {/* Footer Controls with deep zoom map navigation & asset targeting */}
+                {(() => {
+                  const mapUrl = selectedIncident.asset_id
+                    ? `/map?assetId=${selectedIncident.asset_id}&zoom=16`
+                    : selectedIncident.latitude && selectedIncident.longitude
+                    ? `/map?lat=${selectedIncident.latitude}&lng=${selectedIncident.longitude}&zoom=16&focus=${encodeURIComponent(selectedIncident.title)}`
+                    : selectedIncident.district && DISTRICT_COORDS[selectedIncident.district]
+                    ? `/map?lat=${DISTRICT_COORDS[selectedIncident.district][0]}&lng=${DISTRICT_COORDS[selectedIncident.district][1]}&zoom=16&district=${encodeURIComponent(selectedIncident.district)}&focus=${encodeURIComponent(selectedIncident.title)}`
+                    : `/map?zoom=16`;
+
+                  const assetsUrl = selectedIncident.asset_id
+                    ? `/assets?assetId=${selectedIncident.asset_id}`
+                    : `/assets?search=${encodeURIComponent(selectedIncident.category || "")}&district=${encodeURIComponent(selectedIncident.district || "All Districts")}`;
+
+                  return (
+                    <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-4">
+                      <div className="flex items-center gap-2">
+                        <Link
+                          href={mapUrl}
+                          className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold transition ${
+                            isGovt ? "border-slate-300 text-slate-700 hover:bg-slate-100" : "border-white/10 text-white hover:bg-white/5"
+                          }`}
+                        >
+                          <MapPin size={13} /> View on Tripura Map
+                        </Link>
+                        <Link
+                          href={assetsUrl}
+                          className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold transition ${
+                            isGovt ? "border-slate-300 text-slate-700 hover:bg-slate-100" : "border-white/10 text-white hover:bg-white/5"
+                          }`}
+                        >
+                          <Database size={13} /> Infrastructure Registry
+                        </Link>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedIncident(null)}
+                        className="rounded-xl bg-cyan-400 hover:bg-cyan-300 px-5 py-2 text-xs font-black text-slate-950 transition"
+                      >
+                        Done &amp; Close
+                      </button>
+                    </div>
+                  );
+                })()}
               </motion.div>
             </div>
           )}

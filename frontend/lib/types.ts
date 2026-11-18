@@ -28,6 +28,9 @@ export type Incident = {
   district?: string | null;
   city?: string | null;
   landmark?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  photo_url?: string | null;
   assigned_department?: string | null;
   verified_by?: string | null;
   created_at: string;
@@ -1451,10 +1454,13 @@ export const DEMO_INCIDENTS: Incident[] = [
     priority: "P1",
     status: "reported",
     reporter_email: "citizen.redressal@tripura.gov.in",
-    reporter_phone: "+91 98621 44520",
+    reporter_phone: null,
     district: "West Tripura",
     city: "Agartala",
     landmark: "Battala - Paradise Chowmuhani Arterial Stretch",
+    latitude: 23.8340,
+    longitude: 91.2828,
+    photo_url: "https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?w=800&auto=format&fit=crop&q=80",
     assigned_department: "Public Works Department & DWS",
     verified_by: "Pending Officer Assignment",
     created_at: new Date(Date.now() - 1000 * 60 * 18).toISOString(),
@@ -1470,7 +1476,7 @@ export const DEMO_INCIDENTS: Incident[] = [
     priority: "P1",
     status: "work_assigned",
     reporter_email: "debbarma.arun@gmail.com",
-    reporter_phone: "+91 98621 44520",
+    reporter_phone: null,
     district: "West Tripura",
     landmark: "Near Narsingarh Police Station, Airport Highway",
     assigned_department: "Tripura PWD (Roads)",

@@ -1,6 +1,6 @@
-# GIS — Part 1
+# CivicLens AI Platform — GIS & Spatial Heatmap Specifications
 
-CivicLens uses PostgreSQL with PostGIS.
+CivicLens uses PostgreSQL 16 with PostGIS 3.4 for spatial geometry, coordinate projection (EPSG:4326), deep zoom navigation (Zoom 16), and dynamic district focusing across all 8 districts of Tripura.
 
 ## Spatial model
 

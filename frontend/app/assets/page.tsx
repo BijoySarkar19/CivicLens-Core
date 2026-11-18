@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
+import { useSearchParams } from "next/navigation";
 import { Boxes, Search, MapPin, TrendingUp, Layers } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { Asset, TRIPURA_SEED_ASSETS } from "@/lib/types";
@@ -37,7 +38,7 @@ const CONDITION_STYLES_GOVT: Record<string, string> = {
   unknown: "text-gray-600 border-gray-200 bg-gray-50",
 };
 
-export default function AssetsPage() {
+function AssetsPageContent() {
   const [rows, setRows] = useState<Asset[]>(TRIPURA_SEED_ASSETS);
   const [query, setQuery] = useState("");
   const [districtFilter, setDistrictFilter] = useState("All Districts");
@@ -48,6 +49,30 @@ export default function AssetsPage() {
   const [touristOnly, setTouristOnly] = useState(false);
   const [view, setView] = useState<"table" | "grid">("table");
   const { isGovt } = useGovtMode();
+  const searchParams = useSearchParams();
+  const rawAssetId = searchParams.get("assetId");
+  const searchParam = searchParams.get("search");
+  const districtParam = searchParams.get("district");
+
+  useEffect(() => {
+    if (rawAssetId) {
+      const idNum = Number(rawAssetId);
+      const matched = rows.find((a) => a.id === idNum);
+      if (matched) {
+        setQuery(matched.asset_code);
+        if (matched.district && TRIPURA_DISTRICTS.includes(matched.district)) {
+          setDistrictFilter(matched.district);
+        }
+      }
+    } else if (searchParam) {
+      setQuery(searchParam);
+      if (districtParam && TRIPURA_DISTRICTS.includes(districtParam)) {
+        setDistrictFilter(districtParam);
+      }
+    } else if (districtParam && TRIPURA_DISTRICTS.includes(districtParam)) {
+      setDistrictFilter(districtParam);
+    }
+  }, [rawAssetId, searchParam, districtParam, rows]);
 
   useEffect(() => {
     apiFetch<{ items: Asset[] }>("/assets/?limit=200")
@@ -137,6 +162,29 @@ export default function AssetsPage() {
             </span>
           </div>
         </div>
+
+        {rawAssetId && (
+          <div className={`mt-4 rounded-xl border p-3.5 flex items-center justify-between text-xs font-bold ${
+            isGovt ? "border-blue-300 bg-blue-50 text-blue-900" : "border-cyan-400/40 bg-cyan-400/10 text-cyan-200"
+          }`}>
+            <span className="flex items-center gap-2">
+              <span className="flex h-2.5 w-2.5 rounded-full bg-cyan-400 animate-ping" />
+              Focusing Specific Infrastructure Asset: <strong>{query || `Asset ID #${rawAssetId}`}</strong>
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                setQuery("");
+                setDistrictFilter("All Districts");
+              }}
+              className={`rounded-lg px-2.5 py-1 text-[11px] font-bold border transition ${
+                isGovt ? "border-blue-300 bg-white text-blue-800" : "border-cyan-400/30 bg-cyan-400/20 text-cyan-200"
+              }`}
+            >
+              Clear Filter
+            </button>
+          </div>
+        )}
 
         {/* Filters bar */}
         <div className="mt-6 flex flex-wrap gap-3 items-center">
@@ -448,5 +496,13 @@ export default function AssetsPage() {
         )}
       </section>
     </PageShell>
+  );
+}
+
+export default function AssetsPage() {
+  return (
+    <Suspense fallback={<div className="skeleton min-h-screen" />}>
+      <AssetsPageContent />
+    </Suspense>
   );
 }

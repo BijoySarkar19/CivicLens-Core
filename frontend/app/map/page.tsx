@@ -21,6 +21,26 @@ function MapPageContent() {
   const searchParams = useSearchParams();
   const rawAssetId = searchParams.get("assetId");
   const selectedAssetId = rawAssetId ? Number(rawAssetId) : null;
+  const rawLat = searchParams.get("lat");
+  const rawLng = searchParams.get("lng");
+  const rawZoom = searchParams.get("zoom");
+  const focusTitle = searchParams.get("focus") || searchParams.get("name") || searchParams.get("title");
+  const districtParam = searchParams.get("district");
+
+  const targetLocation = rawLat && rawLng
+    ? {
+        lat: parseFloat(rawLat),
+        lng: parseFloat(rawLng),
+        zoom: rawZoom ? parseInt(rawZoom, 10) : 16,
+        title: focusTitle || undefined,
+      }
+    : null;
+
+  useEffect(() => {
+    if (districtParam) {
+      setSelectedDistrict(districtParam);
+    }
+  }, [districtParam]);
 
   useEffect(() => {
     apiFetch<{ items: Asset[] }>("/assets/?limit=500")
@@ -110,12 +130,26 @@ function MapPageContent() {
           </div>
         )}
 
+        {targetLocation && (
+          <div className={`mt-4 rounded-xl border p-3.5 flex items-center justify-between text-xs font-bold ${
+            isGovt ? "border-amber-400 bg-amber-50 text-amber-950" : "border-cyan-400/40 bg-cyan-400/10 text-cyan-200"
+          }`}>
+            <span className="flex items-center gap-2">
+              <span className="flex h-2.5 w-2.5 rounded-full bg-cyan-400 animate-ping" />
+              Focusing Targeted Coordinate: <strong>{targetLocation.title || "Target Coordinate"}</strong>
+            </span>
+            <span className="badge font-mono text-[10px] bg-cyan-500 text-slate-950 border-0 font-black">
+              LAT {targetLocation.lat.toFixed(4)}, LNG {targetLocation.lng.toFixed(4)} (Zoom {targetLocation.zoom || 16})
+            </span>
+          </div>
+        )}
+
         <p className={`mt-2 text-sm ${muteColor}`}>
           Geolocated public assets rendered on OpenStreetMap tiles centered on Tripura. Click any pinpoint marker to inspect asset code, municipality, and condition.
         </p>
 
         <div className="mt-6" role="region" aria-label="Interactive map of Tripura infrastructure">
-          <MapClient assets={filtered} selectedAssetId={selectedAssetId} />
+          <MapClient assets={filtered} selectedAssetId={selectedAssetId} targetLocation={targetLocation} />
         </div>
 
         <p className={`mt-3 text-xs ${muteColor}`}>

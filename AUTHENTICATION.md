@@ -1,4 +1,6 @@
-# Authentication — Part 1
+# CivicLens AI Platform — Authentication & Role Scopes
+
+Secure, departmentalized officer authentication and open public citizen redressal workflows.
 
 ## Flow
 

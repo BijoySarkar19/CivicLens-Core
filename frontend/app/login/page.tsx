@@ -26,6 +26,7 @@ import {
   MapPin,
   Crown,
   Sparkles,
+  Camera,
 } from "lucide-react";
 
 interface StoredGrievance {
@@ -39,6 +40,7 @@ interface StoredGrievance {
   district?: string;
   city?: string;
   landmark?: string;
+  photo?: string | null;
   date: string;
 }
 
@@ -567,11 +569,40 @@ function LoginPageContent() {
                               <p className="text-[11px] text-gray-500 mt-0.5 flex items-center gap-1">
                                 <MapPin size={11} /> {g.landmark ? `${g.landmark}, ` : ""}{g.city || "Agartala"}, {g.district || "West Tripura"}
                               </p>
+                              {g.phone && g.phone.trim() && (
+                                <p className="text-[11px] text-gray-400 mt-0.5 flex items-center gap-1 font-mono">
+                                  <Phone size={11} /> {g.phone}
+                                </p>
+                              )}
                             </div>
                             <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20">
                               {g.status.replace("_", " ")}
                             </span>
                           </div>
+
+                          {/* Site Photo Evidence if attached */}
+                          {g.photo && (
+                            <div className="mt-3 overflow-hidden rounded-xl border border-white/10 max-h-48 bg-black/40">
+                              <img
+                                src={g.photo}
+                                alt="Citizen Evidence Photo"
+                                className="w-full h-36 object-cover hover:scale-105 transition duration-300"
+                              />
+                              <div className="p-1.5 bg-black/60 text-[10px] text-cyan-300 flex items-center justify-between">
+                                <span className="flex items-center gap-1 font-semibold">
+                                  <Camera size={11} /> Attached Site Evidence Photo
+                                </span>
+                                <a
+                                  href={g.photo}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="underline text-[10px] text-white hover:text-cyan-200"
+                                >
+                                  View Full
+                                </a>
+                              </div>
+                            </div>
+                          )}
 
                           {/* Progress Stepper */}
                           <div className="mt-3 grid grid-cols-4 gap-1 text-center text-[9px] font-bold">
@@ -622,12 +653,16 @@ function LoginPageContent() {
               <div>
                 {/* Admin Access Notice Banner */}
                 {isAdminRequested && (
-                  <div className="mb-4 rounded-2xl border border-amber-400/40 bg-amber-400/10 p-3.5 text-xs text-amber-200 flex items-start gap-2.5">
-                    <Crown size={18} className="text-amber-300 shrink-0 mt-0.5" />
+                  <div className={`mb-4 rounded-2xl border p-3.5 text-xs flex items-start gap-2.5 ${
+                    isGovt
+                      ? "border-amber-500 bg-amber-100 text-slate-950 shadow-sm"
+                      : "border-amber-400/40 bg-amber-400/10 text-amber-200"
+                  }`}>
+                    <Crown size={18} className={isGovt ? "text-amber-800 shrink-0 mt-0.5" : "text-amber-300 shrink-0 mt-0.5"} />
                     <div>
-                      <p className="font-bold text-amber-300 text-sm">Admin Command Center Sign-In</p>
-                      <p className="text-[11px] opacity-90 mt-0.5">
-                        Administrator authorization is required for <strong>/admin</strong>. Click <strong>&quot;👑 Super Admin&quot;</strong> below for immediate 1-click access.
+                      <p className={`font-black text-sm ${isGovt ? "text-amber-950 font-black" : "text-amber-300"}`}>Admin Command Center Sign-In</p>
+                      <p className={`text-[11px] mt-0.5 ${isGovt ? "text-slate-900 font-semibold" : "opacity-90"}`}>
+                        Administrator authorization is required for <strong>/admin</strong>. Click <strong className={isGovt ? "text-amber-950 font-black" : ""}>&quot;👑 Super Admin&quot;</strong> below for immediate 1-click access.
                       </p>
                     </div>
                   </div>

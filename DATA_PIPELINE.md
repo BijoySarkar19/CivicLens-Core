@@ -1,36 +1,30 @@
-# Data Pipeline
+# CivicLens AI Data Pipeline & Provenance Registry
 
-## Part 1 foundation
+CivicLens AI maintains an auditable data pipeline and provenance registry designed for public infrastructure assets and field grievance streams across Tripura's 8 administrative districts.
 
-Part 1 currently provides a provenance registry and background-job foundation.
+## Data Provenance & Ingestion Schema
 
-A dataset source records:
+Every ingested dataset source records:
+- Source organization and directorate (e.g., PWD, DWS, TSECL, AMC)
+- Publisher and official catalog citation
+- Source URL / endpoint and cryptographic checksum
+- Data licensing terms (e.g., Open Government Data License - India)
+- Import timestamp and total record tally
+- Verification and processing status
 
-- source name
-- publisher
-- dataset name
-- source URL
-- license
-- import timestamp
-- record count
-- processing status
+All infrastructure assets retain a foreign key reference to their provenance origin (`dataset_id`) and upstream record identifier (`source_record_id`).
 
-Assets can retain a source dataset ID and source record ID.
-
-## Planned import pipeline
+## Multi-Stage Ingestion Pipeline
 
 ```text
-source selection
-→ upload/fetch
-→ preview
-→ schema detection
-→ mapping
-→ validation
-→ deduplication
-→ transformation
-→ import
-→ report
-→ audit
+Source Selection & Authentication
+  → Raw Data Upload / Endpoint Polling
+  → Ingestion Preview & Quota Check
+  → Schema Detection & Geocoding Verification
+  → Coordinate Reference System Normalization (EPSG:4326)
+  → Deduplication & Topological Conflict Detection
+  → Data Transformation & Attribute Normalization
+  → Atomic PostGIS Spatial Insertion
+  → Execution Summary Report
+  → Immutable SHA-256 Audit Ledger Inscription
 ```
-
-The complete import engine is a next Part 1 hardening task; it is not represented as complete merely because the provenance tables exist.

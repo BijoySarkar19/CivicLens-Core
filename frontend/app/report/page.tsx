@@ -241,14 +241,18 @@ export default function ReportPage() {
         stored.unshift({
           code: data.incident_code,
           title: payloadTitle,
+          description: description.trim() || `Citizen-filed complaint for ${payloadCategory} at ${landmark || city || district || "Tripura"}.`,
           category: payloadCategory,
           severity: payloadSeverity,
           status: "reported",
           email: payloadEmail,
-          phone: phone.trim() ? `+91 ${phone.trim()}` : "",
+          phone: phone.trim() ? (phone.trim().startsWith("+91") ? phone.trim() : `+91 ${phone.trim()}`) : "",
           district: district,
           city: city,
           landmark: landmark,
+          latitude: latitude,
+          longitude: longitude,
+          photo: photoPreview || null,
           date: new Date().toISOString(),
         });
         localStorage.setItem("cl-user-grievances", JSON.stringify(stored.slice(0, 50)));
@@ -274,14 +278,18 @@ export default function ReportPage() {
         stored.unshift({
           code: offlineCode,
           title: payloadTitle,
+          description: description.trim() || `Citizen-filed complaint for ${payloadCategory} at ${landmark || city || district || "Tripura"}.`,
           category: payloadCategory,
           severity: payloadSeverity,
           status: "reported",
           email: payloadEmail,
-          phone: phone.trim() ? `+91 ${phone.trim()}` : "",
+          phone: phone.trim() ? (phone.trim().startsWith("+91") ? phone.trim() : `+91 ${phone.trim()}`) : "",
           district: district || "West Tripura",
           city: city || "Agartala",
           landmark: landmark || "Central",
+          latitude: latitude,
+          longitude: longitude,
+          photo: photoPreview || null,
           date: new Date().toISOString(),
         });
         localStorage.setItem("cl-user-grievances", JSON.stringify(stored.slice(0, 50)));

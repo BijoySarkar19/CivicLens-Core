@@ -1,4 +1,6 @@
-# Database — Part 1
+# CivicLens AI Platform — Database Architecture & Spatial Geometry
+
+PostgreSQL 16 + PostGIS 3.4 spatial geometry schema, transactional audit trail, and domain event streams.
 
 ## Source of truth
 

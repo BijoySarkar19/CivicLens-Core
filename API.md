@@ -1,4 +1,6 @@
-# API — Part 1
+# CivicLens AI Platform — API Reference
+
+Unified platform API specification serving Smart Urban Governance, spatial infrastructure operations, and predictive decision workflows across Tripura.
 
 Base path:
 

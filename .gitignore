@@ -66,3 +66,4 @@ coverage/
 
 # Generated files
 *.pyc
+*.tsbuildinfo
